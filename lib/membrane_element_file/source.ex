@@ -12,19 +12,27 @@ defmodule Membrane.Element.File.Source do
   alias Membrane.Element.File.SourceOptions
 
 
-  def handle_prepare(%SourceOptions{location: location}) do
-    case File.open(location, [:binary, :read]) do
-      {:ok, fd} ->
-        {:ok, %{fd: fd}}
+  @read_chunk_size 2048
 
-      {:error, reason} ->
-        {:error, {:open, reason}}
-    end
+
+  def handle_prepare(%SourceOptions{location: location}) do
+    stream = File.stream!(location, [], @read_chunk_size)
+    {:ok, %{stream: stream}}
   end
 
 
-  def handle_play(state) do
-    # TODO
+  def handle_play(%{stream: stream} = state) do
+    # TODO kill that task when we call stop()
+    me = self
+
+    Task.async(fn ->
+      stream
+      |> Stream.map(fn(chunk) ->
+        Membrane.Element.File.Source.send_buffer(me, %Membrane.Caps{content: "application/octet-stream"}, chunk) 
+      end)
+      |> Stream.run
+    end)
+
     {:ok, state}
   end
 end

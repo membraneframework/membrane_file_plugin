@@ -1,2 +1,2 @@
-%{"membrane_core": {:git, "git@bitbucket.org:radiokit/membrane-core.git", "1120fa0b2108290c86faeab58b3029cf67e15384", []},
+%{"membrane_core": {:git, "git@bitbucket.org:radiokit/membrane-core.git", "49bb8b741338cf8fdd902a5c83d7ff49ef1c723e", []},
   "porcelain": {:hex, :porcelain, "2.0.2", "c1d4863de3e391195e36457bb3d7e17ee1bca5a44f1d708bc037c313342f58e9", [:mix], []}}
