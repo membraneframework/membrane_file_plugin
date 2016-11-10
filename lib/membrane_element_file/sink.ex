@@ -29,7 +29,7 @@ defmodule Membrane.Element.File.Sink do
         {:ok, state}
 
       {:error, reason} ->
-        {:error, {:write, reason}}
+        {:error, {:write, reason}, state}
     end
   end
 end
