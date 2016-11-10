@@ -22,11 +22,11 @@ This should copy `/etc/passwd` to `./test`:
 
 ```elixir
 {:ok, sink} = Membrane.Element.File.Sink.start_link(%Membrane.Element.File.SinkOptions{location: "./test"})
-Membrane.Element.File.Sink.play(sink)
+Membrane.Element.play(sink)
 
 {:ok, source} = Membrane.Element.File.Source.start_link(%Membrane.Element.File.SourceOptions{location: "/etc/passwd"})
-Membrane.Element.File.Source.link(source, sink)
-Membrane.Element.File.Source.play(source)
+Membrane.Element.link(source, sink)
+Membrane.Element.play(source)
 ```
 
 # Authors
