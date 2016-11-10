@@ -28,7 +28,7 @@ defmodule Membrane.Element.File.Source do
     Task.async(fn ->
       stream
       |> Stream.map(fn(chunk) ->
-        Membrane.Element.send_buffer(me, %Membrane.Caps{content: "application/octet-stream"}, chunk) 
+        Membrane.Element.send_buffer(me, {%Membrane.Caps{content: "application/octet-stream"}, chunk}) 
       end)
       |> Stream.run
     end)
