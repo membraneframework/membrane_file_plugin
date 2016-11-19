@@ -12,10 +12,22 @@ defmodule Membrane.Element.File.Sink do
   alias Membrane.Element.File.SinkOptions
 
 
-  def handle_prepare(%SinkOptions{location: location}) do
+  # Private API
+
+  @doc false
+  def handle_init(%SinkOptions{location: location}) do
+    {:ok, %{
+      location: location,
+      fd: nil
+    }}
+  end
+
+
+  @doc false
+  def handle_prepare(%{location: location} = state) do
     case File.open(location, [:binary, :write]) do
       {:ok, fd} ->
-        {:ok, %{fd: fd}}
+        {:ok, %{state | fd: fd}}
 
       {:error, reason} ->
         {:error, {:open, reason}}
@@ -23,6 +35,19 @@ defmodule Membrane.Element.File.Sink do
   end
 
 
+  @doc false
+  def handle_stop(%{fd: fd} = state) do
+    case File.close(fd) do
+      :ok ->
+        {:ok, %{state | fd: nil}}
+
+      {:error, reason} ->
+        {:error, {:close, reason}}
+    end
+  end
+
+
+  @doc false
   def handle_buffer(_caps, data, %{fd: fd} = state) do
     case IO.binwrite(fd, data) do
       :ok ->

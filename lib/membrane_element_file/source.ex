@@ -15,24 +15,49 @@ defmodule Membrane.Element.File.Source do
   @read_chunk_size 2048
 
 
-  def handle_prepare(%SourceOptions{location: location}) do
-    stream = File.stream!(location, [], @read_chunk_size)
-    {:ok, %{stream: stream}}
+  # Private API
+
+  @doc false
+  def handle_init(%SourceOptions{location: location}) do
+    {:ok, %{
+      location: location,
+      stream: nil,
+    }}
   end
 
 
+  @doc false
+  def handle_prepare(%{location: location} = state) do
+    stream = File.stream!(location, [], @read_chunk_size)
+    {:ok, %{state | stream: stream}}
+  end
+
+
+  @doc false
   def handle_play(%{stream: stream} = state) do
-    # TODO kill that task when we call stop()
     me = self
 
     Task.async(fn ->
       stream
       |> Stream.map(fn(chunk) ->
-        Membrane.Element.send_buffer(me, {%Membrane.Caps{content: "application/octet-stream"}, chunk}) 
+        send(self(), {:membrane_element_file_source_chunk, chunk})
       end)
       |> Stream.run
     end)
 
     {:ok, state}
+  end
+
+
+  @doc false
+  def handle_stop(state) do
+    # TODO kill streaming task
+    {:ok, state}
+  end
+
+
+  @doc false
+  def handle_other({:membrane_element_file_source_chunk, chunk}, state) do
+    {:send, [%Membrane.Buffer{payload: chunk}], state}
   end
 end
