@@ -25,7 +25,7 @@ defmodule Membrane.Element.File.Sink do
         {:ok, %{state | fd: fd}}
 
       {:error, reason} ->
-        {:error, {:open, reason}}
+        {:error, {:open, reason}, state}
     end
   end
 
@@ -37,7 +37,7 @@ defmodule Membrane.Element.File.Sink do
         {:ok, %{state | fd: nil}}
 
       {:error, reason} ->
-        {:error, {:close, reason}}
+        {:error, {:close, reason}, state}
     end
   end
 
