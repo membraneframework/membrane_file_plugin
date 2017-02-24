@@ -11,9 +11,9 @@ defmodule Membrane.Element.File.Mixfile do
      maintainers: ["Marcin Lewandowski"],
      licenses: ["LGPL"],
      name: "Membrane Element: File",
-     source_url: "https://bitbucket.org/radiokit/membrane-element-file",
+     source_url: "https://github.com/membraneframework/membrane-element-file",
      preferred_cli_env: [espec: :test],
-     deps: deps]
+     deps: deps()]
   end
 
 
@@ -30,7 +30,7 @@ defmodule Membrane.Element.File.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, git: "git@bitbucket.org:radiokit/membrane-core.git"},
+      {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git"},
     ]
   end
 end
