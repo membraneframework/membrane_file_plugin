@@ -1,6 +1,8 @@
 defmodule Membrane.Element.File.Source do
   use Membrane.Element.Base.Source
   alias Membrane.Element.File.SourceOptions
+  alias Membrane.Buffer
+
 
   @read_chunk_size 2048
 
@@ -51,7 +53,7 @@ defmodule Membrane.Element.File.Source do
   @doc false
   def handle_other({:membrane_element_file_source_chunk, chunk}, state) do
     {:ok, [
-      {:send, {:source, %Membrane.Buffer{payload: chunk}}}
+      {:send, {:source, %Buffer{payload: chunk}}}
     ], state}
   end
 end

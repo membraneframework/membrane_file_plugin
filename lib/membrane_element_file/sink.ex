@@ -1,6 +1,8 @@
 defmodule Membrane.Element.File.Sink do
   use Membrane.Element.Base.Sink
   alias Membrane.Element.File.SinkOptions
+  alias Membrane.Buffer
+
 
   def_known_sink_pads %{
     :sink => {:always, :any}
@@ -43,8 +45,8 @@ defmodule Membrane.Element.File.Sink do
 
 
   @doc false
-  def handle_buffer(:sink, _caps, data, %{fd: fd} = state) do
-    case IO.binwrite(fd, data) do
+  def handle_buffer(:sink, _caps, %Buffer{payload: payload}, %{fd: fd} = state) do
+    case IO.binwrite(fd, payload) do
       :ok ->
         {:ok, state}
 
