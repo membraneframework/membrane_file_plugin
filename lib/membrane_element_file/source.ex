@@ -31,10 +31,11 @@ defmodule Membrane.Element.File.Source do
 
   @doc false
   def handle_play(%{stream: stream} = state) do
+    self_pid = self()
     Task.async(fn ->
       stream
       |> Stream.map(fn(chunk) ->
-        send(self(), {:membrane_element_file_source_chunk, chunk})
+        send(self_pid, {:membrane_element_file_source_chunk, chunk})
       end)
       |> Stream.run
     end)
