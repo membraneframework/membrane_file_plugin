@@ -5,7 +5,7 @@ defmodule Membrane.Element.File.Sink do
 
 
   def_known_sink_pads %{
-    :sink => {:always, :any}
+    :sink => {:always, :push, :any}
   }
 
 
@@ -24,7 +24,7 @@ defmodule Membrane.Element.File.Sink do
   def handle_prepare(:stopped, %{location: location} = state) do
     case File.open(location, [:binary, :write]) do
       {:ok, fd} ->
-        {:ok, %{state | fd: fd}}
+        {:ok, {[], %{state | fd: fd}}}
 
       {:error, reason} ->
         {:error, {:open, reason}, state}
@@ -36,7 +36,7 @@ defmodule Membrane.Element.File.Sink do
   def handle_stop(%{fd: fd} = state) do
     case File.close(fd) do
       :ok ->
-        {:ok, %{state | fd: nil}}
+        {:ok, {[], %{state | fd: nil}}}
 
       {:error, reason} ->
         {:error, {:close, reason}, state}
@@ -45,10 +45,10 @@ defmodule Membrane.Element.File.Sink do
 
 
   @doc false
-  def handle_buffer(:sink, _caps, %Buffer{payload: payload}, %{fd: fd} = state) do
+  def handle_write(:sink, _caps, %Buffer{payload: payload}, %{fd: fd} = state) do
     case IO.binwrite(fd, payload) do
       :ok ->
-        {:ok, state}
+        {:ok, {[], state}}
 
       {:error, reason} ->
         {:error, {:write, reason}, state}
