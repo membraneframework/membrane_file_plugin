@@ -43,7 +43,7 @@ defmodule Membrane.Element.File.Source do
   @doc false
   def handle_stop(%{file: file} = state) do
     with :ok <- file ~> (Nil -> :ok; _ -> File.close file)
-    do {:ok, state}
+    do {:ok, {[], state}}
     else {:error, reason} -> {:error, {:close_file, reason}}
     end
   end
