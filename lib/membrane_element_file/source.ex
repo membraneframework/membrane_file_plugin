@@ -31,7 +31,7 @@ defmodule Membrane.Element.File.Source do
   end
 
   @doc false
-  def handle_demand1(:sink, _, %{file: file, chunk_size: size} = state) do
+  def handle_demand1(:source, _, %{file: file, chunk_size: size} = state) do
     with <<payload::binary>> <- file |> IO.binread(size)
     do {:ok, {[{:buffer, {:source, %Buffer{payload: payload}}}], state}}
     else
