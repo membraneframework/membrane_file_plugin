@@ -5,7 +5,7 @@ defmodule Membrane.Element.File.Sink do
 
 
   def_known_sink_pads %{
-    :sink => {:always, :push, :any}
+    :sink => {:always, :pull, :any}
   }
 
 
@@ -22,36 +22,27 @@ defmodule Membrane.Element.File.Sink do
 
   @doc false
   def handle_prepare(:stopped, %{location: location} = state) do
-    case File.open(location, [:binary, :write]) do
-      {:ok, fd} ->
-        {:ok, {[], %{state | fd: fd}}}
-
-      {:error, reason} ->
-        {:error, {:open, reason}, state}
+    with {:ok, fd} <- File.open(location, [:binary, :write])
+    do {:ok, {[], %{state | fd: fd}}}
+    else {:error, reason} -> {:error, {:open, reason}}
     end
   end
 
 
   @doc false
   def handle_stop(%{fd: fd} = state) do
-    case File.close(fd) do
-      :ok ->
-        {:ok, {[], %{state | fd: nil}}}
-
-      {:error, reason} ->
-        {:error, {:close, reason}, state}
+    with :ok <- File.close(fd)
+    do {:ok, {[], %{state | fd: nil}}}
+    else {:error, reason} -> {:error, {:close, reason}}
     end
   end
 
 
   @doc false
-  def handle_write(:sink, _caps, %Buffer{payload: payload}, %{fd: fd} = state) do
-    case IO.binwrite(fd, payload) do
-      :ok ->
-        {:ok, {[], state}}
-
-      {:error, reason} ->
-        {:error, {:write, reason}, state}
+  def handle_write1(:sink, %Buffer{payload: payload}, _, %{fd: fd} = state) do
+    with :ok <- IO.binwrite(fd, payload)
+    do {:ok, {[demand: :sink], state}}
+    else {:error, reason} -> {:error, {:write, reason}}
     end
   end
 end
