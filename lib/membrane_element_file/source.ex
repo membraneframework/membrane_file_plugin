@@ -29,9 +29,19 @@ defmodule Membrane.Element.File.Source do
     else {:error, reason} -> {:error, {:open_file, reason}}
     end
   end
+  def handle_prepare(_, state), do: {:ok, {[], state}}
 
   @doc false
-  def handle_demand1(:source, _, %{file: file, chunk_size: size} = state) do
+  def handle_demand1(:source, _, %{chunk_size: chunk_size} = state), do:
+    read_send(chunk_size, state)
+
+  def handle_demand(:source, size, :bytes, _, state), do:
+    read_send(size, state)
+
+  def handle_demand(:source, size, :buffers, params, state), do:
+    super(:source, size, :buffers, params, state)
+
+  defp read_send(size, %{file: file} = state) do
     with <<payload::binary>> <- file |> IO.binread(size)
     do {:ok, {[{:buffer, {:source, %Buffer{payload: payload}}}], state}}
     else
