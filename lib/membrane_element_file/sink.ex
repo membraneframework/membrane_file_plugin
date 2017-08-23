@@ -28,6 +28,11 @@ defmodule Membrane.Element.File.Sink do
     end
   end
 
+  @doc false
+  def handle_play(state) do
+    {:ok, {[demand: :sink], state}}
+  end
+
 
   @doc false
   def handle_stop(%{fd: fd} = state) do
