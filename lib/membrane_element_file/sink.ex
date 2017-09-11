@@ -5,7 +5,7 @@ defmodule Membrane.Element.File.Sink do
 
 
   def_known_sink_pads %{
-    :sink => {:always, :pull, :any}
+    :sink => {:always, {:pull, demand_in: :bytes}, :any}
   }
 
 
