@@ -1,6 +1,6 @@
 defmodule Membrane.Element.File.Sink do
   use Membrane.Element.Base.Sink
-  alias Membrane.Element.File.SinkOptions
+  alias Membrane.Element.File.Sink.Options
   alias Membrane.Buffer
 
 
@@ -12,7 +12,7 @@ defmodule Membrane.Element.File.Sink do
   # Private API
 
   @doc false
-  def handle_init(%SinkOptions{location: location}) do
+  def handle_init(%Options{location: location}) do
     {:ok, %{
       location: location,
       fd: nil

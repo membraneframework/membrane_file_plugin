@@ -1,6 +1,6 @@
 defmodule Membrane.Element.File.Source do
   use Membrane.Element.Base.Source
-  alias Membrane.Element.File.SourceOptions
+  alias Membrane.Element.File.Source.Options
   alias Membrane.Buffer
   use Membrane.Helper
 
@@ -13,7 +13,7 @@ defmodule Membrane.Element.File.Source do
   # Private API
 
   @doc false
-  def handle_init(%SourceOptions{location: location, chunk_size: size}) do
+  def handle_init(%Options{location: location, chunk_size: size}) do
     {:ok, %{
       location: location,
       chunk_size: size,
