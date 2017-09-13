@@ -5,7 +5,7 @@ defmodule Membrane.Element.File.Sink do
 
 
   def_known_sink_pads %{
-    :sink => {:always, {:pull, demand_in: :buffer}, :any}
+    :sink => {:always, {:pull, demand_in: :buffers}, :any}
   }
 
 
@@ -30,7 +30,7 @@ defmodule Membrane.Element.File.Sink do
 
   @doc false
   def handle_play(state) do
-    {{:ok, demand: :sink}, state}}
+    {{:ok, demand: :sink}, state}
   end
 
 
