@@ -8,7 +8,7 @@ defmodule Membrane.Element.File.Mixfile do
      elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      description: "Membrane Multimedia Framework (File Element)",
-     maintainers: ["Marcin Lewandowski"],
+     maintainers: ["Marcin Lewandowski", "Bartosz Błaszków"],
      licenses: ["LGPL"],
      name: "Membrane Element: File",
      source_url: "https://github.com/membraneframework/membrane-element-file",
@@ -31,6 +31,7 @@ defmodule Membrane.Element.File.Mixfile do
   defp deps do
     [
       {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git", branch: "feature/pull"},
+      {:espec, "~> 1.4.6", only: :test},
     ]
   end
 end
