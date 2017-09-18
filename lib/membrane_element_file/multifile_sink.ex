@@ -1,5 +1,14 @@
 defmodule Membrane.Element.File.Sink.Multi do
   @moduledoc """
+  Writes bufffers to a set of files. File is switched on event.
+
+  Files are named according to naming_fun passed in options.
+  This function receives sequential number of file and should return string.
+  It defaults to file000, file001, ...
+
+  The event type, which starts writing to a next file,
+  is passed as atom in `split_on` option.
+  It defaults to `:split`.
   """
   use Membrane.Element.Base.Sink
   alias Membrane.Element.File.Sink.Multi.Options
