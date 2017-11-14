@@ -30,7 +30,7 @@ defmodule Membrane.Element.File.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git", branch: "feature/pull"},
+      {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git"},
       {:espec, "~> 1.4.6", only: :test},
     ]
   end
