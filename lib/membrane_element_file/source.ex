@@ -1,7 +1,7 @@
 defmodule Membrane.Element.File.Source do
   use Membrane.Element.Base.Source
   alias Membrane.Element.File.Source.Options
-  alias Membrane.Buffer
+  alias Membrane.{Buffer, Event}
   use Membrane.Helper
 
 
@@ -45,7 +45,7 @@ defmodule Membrane.Element.File.Source do
     with <<payload::binary>> <- file |> IO.binread(size)
     do {{:ok, buffer: {:source, %Buffer{payload: payload}}}, state}
     else
-      :eof -> handle_stop state
+      :eof -> {{:ok, event: {:source, Event.eos}}, state}
       {:error, reason} -> {{:error, {:read_file, reason}}, state}
     end
   end
@@ -56,6 +56,11 @@ defmodule Membrane.Element.File.Source do
     do {:ok, state}
     else {:error, reason} -> {{:error, {:close_file, reason}}, state}
     end
+  end
+
+  def handle_shutdown(%{file: file}) do
+    if file != nil, do: File.close file
+    :ok
   end
 
 end
