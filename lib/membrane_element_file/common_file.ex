@@ -1,23 +1,23 @@
 defmodule Membrane.Element.File.CommonFile do
-
   def open(location \\ nil, mode, state) do
     location = location || state.location
-    with {:ok, fd} <- File.open(location, [:binary, mode])
-    do
+
+    with {:ok, fd} <- File.open(location, [:binary, mode]) do
       {:ok, %{state | fd: fd}}
-    else {:error, reason} -> {{:error, {:open, reason}}, state}
+    else
+      {:error, reason} -> {{:error, {:open, reason}}, state}
     end
   end
 
   def close(%{fd: fd} = state) do
-    with :ok <- File.close(fd)
-    do {:ok, %{state | fd: nil}}
-    else {:error, reason} -> {{:error, {:close, reason}}, state}
+    with :ok <- File.close(fd) do
+      {:ok, %{state | fd: nil}}
+    else
+      {:error, reason} -> {{:error, {:close, reason}}, state}
     end
   end
 
   defdelegate binwrite(fd, data), to: IO
 
   defdelegate binread(fd, data), to: IO
-
 end
