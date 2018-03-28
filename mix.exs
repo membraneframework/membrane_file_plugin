@@ -5,7 +5,7 @@ defmodule Membrane.Element.File.Mixfile do
     [app: :membrane_element_file,
      compilers: Mix.compilers,
      version: "0.0.1",
-     elixir: "~> 1.3",
+     elixir: "~> 1.6",
      elixirc_paths: elixirc_paths(Mix.env),
      description: "Membrane Multimedia Framework (File Element)",
      maintainers: ["Marcin Lewandowski", "Bartosz Błaszków"],
@@ -18,9 +18,7 @@ defmodule Membrane.Element.File.Mixfile do
 
 
   def application do
-    [applications: [
-      :membrane_core
-    ], mod: {Membrane.Element.File, []}]
+    [extra_applications: [], mod: {Membrane.Element.File, []}]
   end
 
 
@@ -31,7 +29,7 @@ defmodule Membrane.Element.File.Mixfile do
   defp deps do
     [
       {:membrane_core, git: "git@github.com:membraneframework/membrane-core.git"},
-      {:espec, "~> 1.4.6", only: :test},
+      {:mockery, "~> 2.1", runtime: false},
     ]
   end
 end

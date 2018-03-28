@@ -1,5 +1,5 @@
-%{"espec": {:hex, :espec, "1.4.6", "9ac809d2a7ce64b9dbb468a517fe0c00c0464e4aeb918709ad2ba68a0a0d6536", [:mix], [{:meck, "0.8.7", [hex: :meck, optional: false]}]},
-  "meck": {:hex, :meck, "0.8.7", "ebad16ca23f685b07aed3bc011efff65fbaf28881a8adf925428ef5472d390ee", [:rebar3], []},
-  "membrane_core": {:git, "git@github.com:membraneframework/membrane-core.git", "e4eab0827a9ae09e0fc9e8110d811a8ee68ed46d", []},
-  "porcelain": {:hex, :porcelain, "2.0.2", "c1d4863de3e391195e36457bb3d7e17ee1bca5a44f1d708bc037c313342f58e9", [:mix], []},
-  "qex": {:hex, :qex, "0.3.3", "d1c038de10308dcc489b9e2f50ebb019b2ffecb1753a4f1535f24b6b702491b0", [:mix], []}}
+%{
+  "membrane_core": {:git, "git@github.com:membraneframework/membrane-core.git", "09f1343141cc2cedccb47361099e4d8ddcac3019", []},
+  "mockery": {:hex, :mockery, "2.1.0", "75f2ae11f1f1ebd006d9e80fa4d2a181ed1bd45c7d48c4e501644c3f5c0012e5", [:mix], []},
+  "qex": {:hex, :qex, "0.3.4", "92fba2ca8fa162d4619d572ec6d9124f47564a5c8dd1e252147c29d3435d2608", [:mix], []},
+}
