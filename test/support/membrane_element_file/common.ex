@@ -1,4 +1,4 @@
-defmodule Membrane.Element.File.CommonTest do
+defmodule Membrane.Element.File.TestSupport.Common do
   defmacro __using__(_) do
     quote do
       alias Membrane.Element.File.CommonFile

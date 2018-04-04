@@ -3,7 +3,7 @@ defmodule Membrane.Element.File.Sink.MultiTest do
   use Mockery
   alias Membrane.Element.File
   @module File.Sink.Multi
-  use File.CommonTest
+  use File.TestSupport.Common
   alias File.CommonFile
   alias Membrane.{Buffer, Event}
 
