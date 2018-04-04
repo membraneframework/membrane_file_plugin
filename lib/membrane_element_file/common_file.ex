@@ -1,4 +1,6 @@
 defmodule Membrane.Element.File.CommonFile do
+  @moduledoc false
+
   def open(location \\ nil, mode, state) do
     location = location || state.location
 

@@ -1,4 +1,8 @@
 defmodule Membrane.Element.File.Sink do
+  @moduledoc """
+  Element that creates a file and stores incoming buffers there (in binary format).
+  """
+
   use Membrane.Element.Base.Sink
   alias Membrane.Buffer
 

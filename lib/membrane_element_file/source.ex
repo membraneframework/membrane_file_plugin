@@ -1,4 +1,9 @@
 defmodule Membrane.Element.File.Source do
+  @moduledoc """
+  Element that reads chunks of data from given file and sends them as buffers
+  through the source pad.
+  """
+
   use Membrane.Element.Base.Source
   alias Membrane.{Buffer, Event}
   use Membrane.Helper
