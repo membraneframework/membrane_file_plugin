@@ -34,9 +34,11 @@ defmodule Membrane.Element.File.Sink.Multi do
               naming_fun: [
                 type: :function,
                 default: &__MODULE__.default_naming_fun/3,
-                description: "Function accepting base path, sequential number and file extension,
-        and returning file path as a string. Default one generates
-        path/to/file0.ext, path/to/file1.ext, ..."
+                description: """
+                Function accepting base path, sequential number and file extension,
+                and returning file path as a string. Default one generates
+                path/to/file0.ext, path/to/file1.ext, ...
+                """
               ],
               split_event_type: [
                 type: :atom,
