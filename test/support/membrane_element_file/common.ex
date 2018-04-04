@@ -3,9 +3,7 @@ defmodule Membrane.Element.File.TestSupport.Common do
     quote do
       alias Membrane.Element.File.CommonFile
 
-      describe "handle_prepare" do
-        setup :state
-
+      describe "common handle_prepare" do
         test "should open file", %{state: state} do
           %{location: location} = state
 
@@ -18,8 +16,8 @@ defmodule Membrane.Element.File.TestSupport.Common do
         end
       end
 
-      describe "handle_stop" do
-        setup [:state, :file]
+      describe "common handle_stop" do
+        setup :file
 
         test "should close file", %{state: state} do
           %{fd: fd} = state
@@ -27,6 +25,10 @@ defmodule Membrane.Element.File.TestSupport.Common do
           assert {:ok, %{state | fd: nil}} == @module.handle_stop(state)
           assert_called(CommonFile, :close, [%{fd: ^fd}], 1)
         end
+      end
+
+      def file(%{state: state}) do
+        %{state: %{state | fd: :file}}
       end
     end
   end

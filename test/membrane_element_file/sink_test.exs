@@ -11,12 +11,10 @@ defmodule Membrane.Element.File.SinkTest do
     %{state: %{location: "", fd: nil}}
   end
 
-  def file(%{state: state}) do
-    %{state: %{state | fd: :file}}
-  end
+  setup_all :state
 
   describe "handle_write1" do
-    setup [:state, :file]
+    setup :file
 
     test "should write received chunk and request demand", %{state: state} do
       mock(CommonFile, [binwrite: 2], fn _file, _data -> :ok end)

@@ -11,12 +11,10 @@ defmodule Membrane.Element.File.SourceTest do
     %{state: %{location: "", chunk_size: nil, fd: nil}}
   end
 
-  def file(%{state: state}) do
-    %{state: %{state | fd: :file}}
-  end
+  setup_all :state
 
   describe "handle_demand1" do
-    setup [:state, :file]
+    setup :file
 
     test "should send chunk of size state.chunk_size", %{state: state} do
       state = %{state | chunk_size: 5}
@@ -36,7 +34,7 @@ defmodule Membrane.Element.File.SourceTest do
   end
 
   describe "handle_demand" do
-    setup [:state, :file]
+    setup :file
 
     test "should send chunk of given size when demand in bytes", %{state: state} do
       mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2, 3, 4, 5>> end)

@@ -11,12 +11,10 @@ defmodule Membrane.Element.File.Sink.MultiTest do
     %{state: %{location: "", fd: nil, naming_fun: fn _ -> "" end, split_on: :split, index: 0}}
   end
 
-  def file(%{state: state}) do
-    %{state: %{state | fd: :file}}
-  end
+  setup_all :state
 
   describe "handle_write1" do
-    setup [:state, :file]
+    setup :file
 
     test "should write received chunk and request demand", %{state: state} do
       %{fd: file} = state
@@ -30,7 +28,7 @@ defmodule Membrane.Element.File.Sink.MultiTest do
   end
 
   describe "handle_event" do
-    setup [:state, :file]
+    setup :file
 
     setup %{state: state} do
       %{state: %{state | naming_fun: fn x -> "#{x}" end}}
