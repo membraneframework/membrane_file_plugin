@@ -34,7 +34,9 @@ defmodule Membrane.Element.File.Sink.MultiTest do
       %{state: %{state | naming_fun: fn x -> "#{x}" end}}
     end
 
-    test "should close current file and open new one if type is state.split_on", %{state: state} do
+    test "should close current file and open new one if event type is state.split_on", %{
+      state: state
+    } do
       mock(CommonFile, [close: 1], fn state -> {:ok, %{state | fd: nil}} end)
       mock(CommonFile, [open: 3], fn "1", _mode, state -> {:ok, %{state | fd: :new_file}} end)
 
@@ -43,6 +45,16 @@ defmodule Membrane.Element.File.Sink.MultiTest do
 
       assert_called(CommonFile, :close, [^state], 1)
       assert_called(CommonFile, :open, ["1", _mode, _state], 1)
+    end
+
+    test "should not close current file and open new one if event type is not state.split_on", %{
+      state: state
+    } do
+      mock(CommonFile, [close: 1], fn state -> {:ok, %{state | fd: nil}} end)
+      mock(CommonFile, [open: 3], fn "1", _mode, state -> {:ok, %{state | fd: :new_file}} end)
+
+      assert {:ok, %{state | index: 0, fd: :file}} ==
+               @module.handle_event(:sink, %Event{type: :abc}, nil, state)
     end
   end
 
