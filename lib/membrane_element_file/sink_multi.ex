@@ -92,6 +92,7 @@ defmodule Membrane.Element.File.Sink.Multi do
 
   @impl true
   def handle_stop(state) do
+    state = state |> Map.update!(:index, &(&1 + 1))
     state |> @f.close
   end
 end
