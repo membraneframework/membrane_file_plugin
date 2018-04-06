@@ -13,7 +13,6 @@ defmodule Membrane.Element.File.Mixfile do
       licenses: ["LGPL"],
       name: "Membrane Element: File",
       source_url: "https://github.com/membraneframework/membrane-element-file",
-      preferred_cli_env: [espec: :test],
       deps: deps()
     ]
   end

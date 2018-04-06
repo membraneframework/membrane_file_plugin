@@ -42,15 +42,15 @@ defmodule Membrane.Element.File.Source do
 
   @impl true
   def handle_demand1(:source, _, %{chunk_size: chunk_size} = state),
-    do: read_send(chunk_size, state)
+    do: supply_demand(chunk_size, state)
 
   @impl true
-  def handle_demand(:source, size, :bytes, _, state), do: read_send(size, state)
+  def handle_demand(:source, size, :bytes, _, state), do: supply_demand(size, state)
 
   def handle_demand(:source, size, :buffers, params, state),
     do: super(:source, size, :buffers, params, state)
 
-  defp read_send(size, %{fd: fd} = state) do
+  defp supply_demand(size, %{fd: fd} = state) do
     with <<payload::binary>> <- fd |> @f.binread(size) do
       {{:ok, buffer: {:source, %Buffer{payload: payload}}}, state}
     else

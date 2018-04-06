@@ -29,7 +29,10 @@ defmodule Membrane.Element.File.Sink.Multi do
               extension: [
                 type: :string,
                 default: "",
-                description: "Extension of the file, should be preceeded with dot (.)"
+                description: """
+                Extension of the file, should be preceeded with dot (.). It is
+                passed to the naming function.
+                """
               ],
               naming_fun: [
                 type: :function,
