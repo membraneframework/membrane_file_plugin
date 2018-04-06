@@ -2,33 +2,29 @@
 
 This package provides elements that can be used to read from and write to files.
 
-# Installation
-
-Add the following line to your `deps` in `mix.exs`.  Run `mix deps.get`.
-
-```elixir
-{:membrane_element_file, git: "git@bitbucket.org:radiokit/membrane-element-file.git"}
-```
-
-Then add the following line to your `applications` in `mix.exs`.
-
-```elixir
-:membrane_element_file
-```
-
 # Sample usage
 
-This should copy `/etc/passwd` to `./test`:
+Playing below pipeline should copy `/etc/passwd` to `./test`:
 
 ```elixir
-{:ok, sink} = Membrane.Element.File.Sink.start_link(%Membrane.Element.File.SinkOptions{location: "./test"})
-Membrane.Element.play(sink)
+defmodule FileExamplePipeline do
+  use Membrane.Pipeline
+  alias Pipeline.Spec
+  alias Membrane.Element.File
 
-{:ok, source} = Membrane.Element.File.Source.start_link(%Membrane.Element.File.SourceOptions{location: "/etc/passwd"})
-Membrane.Element.link(source, sink)
-Membrane.Element.play(source)
+  @doc false
+  @impl true
+  def handle_init(_) do
+    children = [
+      file_src: %File.Source{location: "/etc/passwd"},
+      file_sink: %File.Sink{location: "./test"},
+    ]
+    links = %{
+      {:file_src, :source} => {:file_sink, :sink},
+    }
+
+    {{:ok, %Spec{children: children, links: links}}, %{}}
+  end
+end
+
 ```
-
-# Authors
-
-Marcin Lewandowski
