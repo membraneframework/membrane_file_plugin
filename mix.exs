@@ -9,7 +9,7 @@ defmodule Membrane.Element.File.Mixfile do
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: "Membrane Multimedia Framework (File Element)",
-      maintainers: ["Marcin Lewandowski", "Bartosz Błaszków"],
+      maintainers: ["Membrane Team"],
       licenses: ["Apache 2.0"],
       name: "Membrane Element: File",
       source_url: "https://github.com/membraneframework/membrane-element-file",
