@@ -8,10 +8,6 @@ defmodule Membrane.Element.File.Sink do
 
   @f Mockery.of(Membrane.Element.File.CommonFile)
 
-  @type t :: %__MODULE__{
-          location: String.t()
-        }
-
   def_options location: [type: :string, description: "Path to the file"]
 
   def_known_sink_pads sink: {:always, {:pull, demand_in: :buffers}, :any}

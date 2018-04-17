@@ -10,14 +10,10 @@ defmodule Membrane.Element.File.Source do
 
   @f Mockery.of(Membrane.Element.File.CommonFile)
 
-  @type t :: %__MODULE__{
-          location: String.t(),
-          chunk_size: pos_integer
-        }
-
   def_options location: [type: :string, description: "Path to the file"],
               chunk_size: [
                 type: :integer,
+                spec: pos_integer,
                 default: 2048,
                 description: "Size of chunks being read"
               ]

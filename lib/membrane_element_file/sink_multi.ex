@@ -15,13 +15,6 @@ defmodule Membrane.Element.File.Sink.Multi do
 
   @f Mockery.of(Membrane.Element.File.CommonFile)
 
-  @type t :: %__MODULE__{
-          location: String.t(),
-          extension: String.t(),
-          naming_fun: (String.t(), non_neg_integer, String.t() -> String.t()),
-          split_event_type: atom
-        }
-
   def_options location: [
                 type: :string,
                 description: "Base path to the file, will be passed to the naming function"
@@ -36,6 +29,7 @@ defmodule Membrane.Element.File.Sink.Multi do
               ],
               naming_fun: [
                 type: :function,
+                spec: (String.t(), non_neg_integer, String.t() -> String.t()) ,
                 default: &__MODULE__.default_naming_fun/3,
                 description: """
                 Function accepting base path, sequential number and file extension,
