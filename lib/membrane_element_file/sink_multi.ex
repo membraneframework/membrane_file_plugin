@@ -1,6 +1,6 @@
 defmodule Membrane.Element.File.Sink.Multi do
   @moduledoc """
-  Writes bufffers to a set of files. File is switched on event.
+  Element that writes buffers to a set of files. File is switched on event.
 
   Files are named according to naming_fun passed in options.
   This function receives sequential number of file and should return string.
@@ -29,7 +29,7 @@ defmodule Membrane.Element.File.Sink.Multi do
               ],
               naming_fun: [
                 type: :function,
-                spec: (String.t(), non_neg_integer, String.t() -> String.t()) ,
+                spec: (String.t(), non_neg_integer, String.t() -> String.t()),
                 default: &__MODULE__.default_naming_fun/3,
                 description: """
                 Function accepting base path, sequential number and file extension,
