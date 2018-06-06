@@ -2,7 +2,9 @@
 
 This package provides elements that can be used to read from and write to files.
 
-# Sample usage
+It is part of [Membrane Multimedia Framework](https://membraneframework.org).
+
+## Sample usage
 
 Playing below pipeline should copy `/etc/passwd` to `./test`:
 
