@@ -6,9 +6,10 @@ defmodule Membrane.Element.File.Source do
 
   use Membrane.Element.Base.Source
   alias Membrane.{Buffer, Event}
+  alias Membrane.Element.File.CommonFile
   use Membrane.Helper
 
-  @f Mockery.of(Membrane.Element.File.CommonFile)
+  import Mockery.Macro
 
   def_options location: [type: :string, description: "Path to the file"],
               chunk_size: [
@@ -33,8 +34,8 @@ defmodule Membrane.Element.File.Source do
   end
 
   @impl true
-  def handle_prepare(:stopped, state), do: @f.open(:read, state)
-  def handle_prepare(_, state), do: {:ok, state}
+  def handle_prepare(:stopped, _, state), do: mockable(CommonFile).open(:read, state)
+  def handle_prepare(_, _, state), do: {:ok, state}
 
   @impl true
   def handle_demand1(:source, _, %{chunk_size: chunk_size} = state),
@@ -47,7 +48,7 @@ defmodule Membrane.Element.File.Source do
     do: super(:source, size, :buffers, params, state)
 
   defp supply_demand(size, %{fd: fd} = state) do
-    with <<payload::binary>> <- fd |> @f.binread(size) do
+    with <<payload::binary>> <- fd |> mockable(CommonFile).binread(size) do
       {{:ok, buffer: {:source, %Buffer{payload: payload}}}, state}
     else
       :eof -> {{:ok, event: {:source, Event.eos()}}, state}
@@ -56,5 +57,5 @@ defmodule Membrane.Element.File.Source do
   end
 
   @impl true
-  def handle_stop(state), do: @f.close(state)
+  def handle_stop(_, state), do: mockable(CommonFile).close(state)
 end

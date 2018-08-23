@@ -12,8 +12,9 @@ defmodule Membrane.Element.File.Sink.Multi do
   """
   use Membrane.Element.Base.Sink
   alias Membrane.{Buffer, Event}
+  alias Membrane.Element.File.CommonFile
 
-  @f Mockery.of(Membrane.Element.File.CommonFile)
+  import Mockery.Macro
 
   def_options location: [
                 type: :string,
@@ -61,20 +62,20 @@ defmodule Membrane.Element.File.Sink.Multi do
   end
 
   @impl true
-  def handle_prepare(:stopped, state) do
-    @f.open(state.naming_fun.(state.index), :write, state)
+  def handle_prepare(:stopped, _, state) do
+    mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
   end
 
   @impl true
-  def handle_play(state) do
+  def handle_play(_, state) do
     {{:ok, demand: :sink}, state}
   end
 
   @impl true
   def handle_event(:sink, %Event{type: split_on}, _ctx, %{split_on: split_on} = state) do
-    with {:ok, state} <- state |> @f.close do
+    with {:ok, state} <- state |> mockable(CommonFile).close do
       state = state |> Map.update!(:index, &(&1 + 1))
-      @f.open(state.naming_fun.(state.index), :write, state)
+      mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
     end
   end
 
@@ -82,7 +83,7 @@ defmodule Membrane.Element.File.Sink.Multi do
 
   @impl true
   def handle_write1(:sink, %Buffer{payload: payload}, _, %{fd: fd} = state) do
-    with :ok <- @f.binwrite(fd, payload) do
+    with :ok <- mockable(CommonFile).binwrite(fd, payload) do
       {{:ok, demand: :sink}, state}
     else
       {:error, reason} -> {{:error, {:write, reason}}, state}
@@ -90,8 +91,8 @@ defmodule Membrane.Element.File.Sink.Multi do
   end
 
   @impl true
-  def handle_stop(state) do
+  def handle_stop(_, state) do
     state = state |> Map.update!(:index, &(&1 + 1))
-    state |> @f.close
+    state |> mockable(CommonFile).close
   end
 end

@@ -63,7 +63,7 @@ defmodule Membrane.Element.File.Sink.MultiTest do
 
     test "should increment file index", %{state: state} do
       mock(CommonFile, [close: 1], fn state -> {:ok, %{state | fd: nil}} end)
-      assert {:ok, %{index: 1}} = @module.handle_stop(state)
+      assert {:ok, %{index: 1}} = @module.handle_stop(%{}, state)
     end
   end
 end

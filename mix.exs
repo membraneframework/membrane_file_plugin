@@ -1,17 +1,20 @@
 defmodule Membrane.Element.File.Mixfile do
   use Mix.Project
 
+  @version "0.2.0"
+  @github_url "https://github.com/membraneframework/membrane-element-file"
+
   def project do
     [
       app: :membrane_element_file,
       compilers: Mix.compilers(),
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: "Membrane Multimedia Framework (File Element)",
       package: package(),
       name: "Membrane Element: File",
-      source_url: link(),
+      source_url: @github_url,
       docs: docs(),
       deps: deps()
     ]
@@ -24,14 +27,11 @@ defmodule Membrane.Element.File.Mixfile do
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
-  defp link do
-    "https://github.com/membraneframework/membrane-element-file"
-  end
-
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"]
+      extras: ["README.md"],
+      source_ref: "v#{@version}"
     ]
   end
 
@@ -40,7 +40,7 @@ defmodule Membrane.Element.File.Mixfile do
       maintainers: ["Membrane Team"],
       licenses: ["Apache 2.0"],
       links: %{
-        "GitHub" => link(),
+        "GitHub" => @version,
         "Membrane Framework Homepage" => "https://membraneframework.org"
       }
     ]
@@ -48,9 +48,9 @@ defmodule Membrane.Element.File.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.18", only: :dev, runtime: false},
-      {:membrane_core, "~> 0.1"},
-      {:mockery, "~> 2.1", runtime: false}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:membrane_core, git: "https://github.com/membraneframework/membrane-core.git"},
+      {:mockery, "~> 2.2", runtime: false}
     ]
   end
 end
