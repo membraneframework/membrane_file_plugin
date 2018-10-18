@@ -1,13 +1,13 @@
 defmodule Membrane.Element.File.Source do
   @moduledoc """
   Element that reads chunks of data from given file and sends them as buffers
-  through the source pad.
+  through the output pad.
   """
 
   use Membrane.Element.Base.Source
   alias Membrane.{Buffer, Event}
   alias Membrane.Element.File.CommonFile
-  use Membrane.Helper
+  use Bunch
 
   import Mockery.Macro
 
@@ -19,7 +19,7 @@ defmodule Membrane.Element.File.Source do
                 description: "Size of chunks being read"
               ]
 
-  def_known_source_pads source: {:always, :pull, :any}
+  def_output_pads output: [caps: :any]
 
   # Private API
 
@@ -34,28 +34,24 @@ defmodule Membrane.Element.File.Source do
   end
 
   @impl true
-  def handle_prepare(:stopped, _, state), do: mockable(CommonFile).open(:read, state)
-  def handle_prepare(_, _, state), do: {:ok, state}
+  def handle_stopped_to_prepared(_ctx, state), do: mockable(CommonFile).open(:read, state)
 
   @impl true
-  def handle_demand1(:source, _, %{chunk_size: chunk_size} = state),
-    do: supply_demand(chunk_size, state)
+  def handle_demand(:output, _size, :buffers, _ctx, %{chunk_size: chunk_size} = state),
+    do: supply_demand(chunk_size, [redemand: :output], state)
 
-  @impl true
-  def handle_demand(:source, size, :bytes, _, state), do: supply_demand(size, state)
+  def handle_demand(:output, size, :bytes, _ctx, state),
+    do: supply_demand(size, [], state)
 
-  def handle_demand(:source, size, :buffers, params, state),
-    do: super(:source, size, :buffers, params, state)
-
-  defp supply_demand(size, %{fd: fd} = state) do
+  def supply_demand(size, redemand, %{fd: fd} = state) do
     with <<payload::binary>> <- fd |> mockable(CommonFile).binread(size) do
-      {{:ok, buffer: {:source, %Buffer{payload: payload}}}, state}
+      {{:ok, [buffer: {:output, %Buffer{payload: payload}}] ++ redemand}, state}
     else
-      :eof -> {{:ok, event: {:source, Event.eos()}}, state}
+      :eof -> {{:ok, event: {:output, %Event.EndOfStream{}}}, state}
       {:error, reason} -> {{:error, {:read_file, reason}}, state}
     end
   end
 
   @impl true
-  def handle_stop(_, state), do: mockable(CommonFile).close(state)
+  def handle_prepared_to_stopped(_ctx, state), do: mockable(CommonFile).close(state)
 end

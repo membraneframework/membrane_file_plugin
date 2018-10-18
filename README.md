@@ -21,10 +21,10 @@ defmodule FileExamplePipeline do
   def handle_init(_) do
     children = [
       file_src: %File.Source{location: "/etc/passwd"},
-      file_sink: %File.Sink{location: "./test"},
+      file_input: %File.Sink{location: "./test"},
     ]
     links = %{
-      {:file_src, :source} => {:file_sink, :sink},
+      {:file_src, :source} => {:file_input, :input},
     }
 
     {{:ok, %Spec{children: children, links: links}}, %{}}

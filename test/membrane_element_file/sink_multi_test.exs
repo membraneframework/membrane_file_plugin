@@ -5,23 +5,31 @@ defmodule Membrane.Element.File.Sink.MultiTest do
   @module File.Sink.Multi
   use File.TestSupport.Common
   alias File.CommonFile
-  alias Membrane.{Buffer, Event}
+  alias Membrane.Buffer
 
   def state(_ctx) do
-    %{state: %{location: "", fd: nil, naming_fun: fn _ -> "" end, split_on: :split, index: 0}}
+    %{
+      state: %{
+        location: "",
+        fd: nil,
+        naming_fun: fn _ -> "" end,
+        split_on: %@module.Split{},
+        index: 0
+      }
+    }
   end
 
   setup_all :state
 
-  describe "handle_write1" do
+  describe "handle_write" do
     setup :file
 
     test "should write received chunk and request demand", %{state: state} do
       %{fd: file} = state
       mock(CommonFile, [binwrite: 2], :ok)
 
-      assert {{:ok, demand: :sink}, state} ==
-               @module.handle_write1(:sink, %Buffer{payload: <<1, 2, 3>>}, nil, state)
+      assert {{:ok, demand: :input}, state} ==
+               @module.handle_write(:input, %Buffer{payload: <<1, 2, 3>>}, nil, state)
 
       assert_called(CommonFile, :binwrite, [^file, <<1, 2, 3>>], 1)
     end
@@ -41,7 +49,7 @@ defmodule Membrane.Element.File.Sink.MultiTest do
       mock(CommonFile, [open: 3], fn "1", _mode, state -> {:ok, %{state | fd: :new_file}} end)
 
       assert {:ok, %{state | index: 1, fd: :new_file}} ==
-               @module.handle_event(:sink, %Event{type: :split}, nil, state)
+               @module.handle_event(:input, %@module.Split{}, nil, state)
 
       assert_called(CommonFile, :close, [^state], 1)
       assert_called(CommonFile, :open, ["1", _mode, _state], 1)
@@ -54,16 +62,16 @@ defmodule Membrane.Element.File.Sink.MultiTest do
       mock(CommonFile, [open: 3], fn "1", _mode, state -> {:ok, %{state | fd: :new_file}} end)
 
       assert {:ok, %{state | index: 0, fd: :file}} ==
-               @module.handle_event(:sink, %Event{type: :abc}, nil, state)
+               @module.handle_event(:input, :whatever, nil, state)
     end
   end
 
-  describe "handle_stop" do
+  describe "handle_prepared_to_stopped" do
     setup :file
 
     test "should increment file index", %{state: state} do
       mock(CommonFile, [close: 1], fn state -> {:ok, %{state | fd: nil}} end)
-      assert {:ok, %{index: 1}} = @module.handle_stop(%{}, state)
+      assert {:ok, %{index: 1}} = @module.handle_prepared_to_stopped(%{}, state)
     end
   end
 end

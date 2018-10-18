@@ -40,7 +40,7 @@ defmodule Membrane.Element.File.Mixfile do
       maintainers: ["Membrane Team"],
       licenses: ["Apache 2.0"],
       links: %{
-        "GitHub" => @version,
+        "GitHub" => @github_url,
         "Membrane Framework Homepage" => "https://membraneframework.org"
       }
     ]
@@ -49,7 +49,8 @@ defmodule Membrane.Element.File.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:membrane_core, git: "https://github.com/membraneframework/membrane-core.git"},
+      {:membrane_core, github: "membraneframework/membrane-core", branch: "pre-review"},
+      {:bunch, github: "membraneframework/bunch", branch: "feature/default_access"},
       {:mockery, "~> 2.2", runtime: false}
     ]
   end

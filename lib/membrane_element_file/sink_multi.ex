@@ -11,7 +11,7 @@ defmodule Membrane.Element.File.Sink.Multi do
   It defaults to `:split`.
   """
   use Membrane.Element.Base.Sink
-  alias Membrane.{Buffer, Event}
+  alias Membrane.Buffer
   alias Membrane.Element.File.CommonFile
 
   import Mockery.Macro
@@ -38,15 +38,15 @@ defmodule Membrane.Element.File.Sink.Multi do
                 path/to/file0.ext, path/to/file1.ext, ...
                 """
               ],
-              split_event_type: [
-                type: :atom,
-                default: :split,
-                description: "Type of event causing switching to a new file"
+              split_event: [
+                type: :struct,
+                default: %__MODULE__.Split{},
+                description: "Event causing switching to a new file"
               ]
 
   def default_naming_fun(path, i, ext), do: "#{path}#{i}#{ext}"
 
-  def_known_sink_pads sink: {:always, {:pull, demand_in: :buffers}, :any}
+  def_input_pads input: [demand_unit: :buffers, caps: :any]
 
   # Private API
 
@@ -55,24 +55,24 @@ defmodule Membrane.Element.File.Sink.Multi do
     {:ok,
      %{
        naming_fun: &options.naming_fun.(options.location, &1, options.extension),
-       split_on: options.split_event_type,
+       split_on: options.split_event,
        fd: nil,
        index: 0
      }}
   end
 
   @impl true
-  def handle_prepare(:stopped, _, state) do
+  def handle_stopped_to_prepared(_ctx, state) do
     mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
   end
 
   @impl true
-  def handle_play(_, state) do
-    {{:ok, demand: :sink}, state}
+  def handle_prepared_to_playing(_ctx, state) do
+    {{:ok, demand: :input}, state}
   end
 
   @impl true
-  def handle_event(:sink, %Event{type: split_on}, _ctx, %{split_on: split_on} = state) do
+  def handle_event(:input, split_on, _ctx, %{split_on: split_on} = state) do
     with {:ok, state} <- state |> mockable(CommonFile).close do
       state = state |> Map.update!(:index, &(&1 + 1))
       mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
@@ -82,16 +82,16 @@ defmodule Membrane.Element.File.Sink.Multi do
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
-  def handle_write1(:sink, %Buffer{payload: payload}, _, %{fd: fd} = state) do
+  def handle_write(:input, %Buffer{payload: payload}, _ctx, %{fd: fd} = state) do
     with :ok <- mockable(CommonFile).binwrite(fd, payload) do
-      {{:ok, demand: :sink}, state}
+      {{:ok, demand: :input}, state}
     else
       {:error, reason} -> {{:error, {:write, reason}}, state}
     end
   end
 
   @impl true
-  def handle_stop(_, state) do
+  def handle_prepared_to_stopped(_ctx, state) do
     state = state |> Map.update!(:index, &(&1 + 1))
     state |> mockable(CommonFile).close
   end

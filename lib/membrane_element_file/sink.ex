@@ -11,7 +11,7 @@ defmodule Membrane.Element.File.Sink do
 
   def_options location: [type: :string, description: "Path to the file"]
 
-  def_known_sink_pads sink: {:always, {:pull, demand_in: :buffers}, :any}
+  def_input_pads input: [demand_unit: :buffers, caps: :any]
 
   # Private API
 
@@ -25,23 +25,24 @@ defmodule Membrane.Element.File.Sink do
   end
 
   @impl true
-  def handle_prepare(:stopped, _, state), do: mockable(CommonFile).open(:write, state)
-  def handle_prepare(_, _, state), do: {:ok, state}
+  def handle_stopped_to_prepared(_ctx, state), do: mockable(CommonFile).open(:write, state)
 
   @impl true
-  def handle_play(_, state) do
-    {{:ok, demand: :sink}, state}
+  def handle_prepared_to_playing(_ctx, state) do
+    {{:ok, demand: :input}, state}
   end
 
   @impl true
-  def handle_write1(:sink, %Buffer{payload: payload}, _, %{fd: fd} = state) do
+  def handle_write(:input, %Buffer{payload: payload}, _ctx, %{fd: fd} = state) do
+    :timer.sleep(30)
+
     with :ok <- mockable(CommonFile).binwrite(fd, payload) do
-      {{:ok, demand: :sink}, state}
+      {{:ok, demand: :input}, state}
     else
       {:error, reason} -> {{:error, {:write, reason}}, state}
     end
   end
 
   @impl true
-  def handle_stop(_, state), do: mockable(CommonFile).close(state)
+  def handle_prepared_to_stopped(_ctx, state), do: mockable(CommonFile).close(state)
 end
