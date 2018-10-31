@@ -49,8 +49,8 @@ defmodule Membrane.Element.File.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:membrane_core, github: "membraneframework/membrane-core", branch: "pre-review"},
-      {:bunch, github: "membraneframework/bunch", branch: "feature/default_access"},
+      {:membrane_core, github: "membraneframework/membrane-core"},
+      {:bunch, github: "membraneframework/bunch"},
       {:mockery, "~> 2.2", runtime: false}
     ]
   end

@@ -39,8 +39,8 @@ defmodule Membrane.Element.File.Sink.Multi do
                 """
               ],
               split_event: [
-                type: :struct,
-                default: %__MODULE__.Split{},
+                type: :module,
+                default: Membrane.Element.File.SplitEvent,
                 description: "Event causing switching to a new file"
               ]
 
@@ -72,7 +72,7 @@ defmodule Membrane.Element.File.Sink.Multi do
   end
 
   @impl true
-  def handle_event(:input, split_on, _ctx, %{split_on: split_on} = state) do
+  def handle_event(:input, %split_on{}, _ctx, %{split_on: split_on} = state) do
     with {:ok, state} <- state |> mockable(CommonFile).close do
       state = state |> Map.update!(:index, &(&1 + 1))
       mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)

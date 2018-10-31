@@ -2,10 +2,10 @@ defmodule Membrane.Element.File.Sink.MultiTest do
   use ExUnit.Case
   use Mockery
   alias Membrane.Element.File
+  alias File.{CommonFile, SplitEvent}
+  alias Membrane.Buffer
   @module File.Sink.Multi
   use File.TestSupport.Common
-  alias File.CommonFile
-  alias Membrane.Buffer
 
   def state(_ctx) do
     %{
@@ -13,7 +13,7 @@ defmodule Membrane.Element.File.Sink.MultiTest do
         location: "",
         fd: nil,
         naming_fun: fn _ -> "" end,
-        split_on: %@module.Split{},
+        split_on: SplitEvent,
         index: 0
       }
     }
@@ -49,7 +49,7 @@ defmodule Membrane.Element.File.Sink.MultiTest do
       mock(CommonFile, [open: 3], fn "1", _mode, state -> {:ok, %{state | fd: :new_file}} end)
 
       assert {:ok, %{state | index: 1, fd: :new_file}} ==
-               @module.handle_event(:input, %@module.Split{}, nil, state)
+               @module.handle_event(:input, %SplitEvent{}, nil, state)
 
       assert_called(CommonFile, :close, [^state], 1)
       assert_called(CommonFile, :open, ["1", _mode, _state], 1)

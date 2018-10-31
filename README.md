@@ -24,7 +24,7 @@ defmodule FileExamplePipeline do
       file_sink: %File.Sink{location: "./test"},
     ]
     links = %{
-      {:file_src, :source} => {:file_sink, :file_sink},
+      {:file_src, :output} => {:file_sink, :input},
     }
 
     {{:ok, %Spec{children: children, links: links}}, %{}}

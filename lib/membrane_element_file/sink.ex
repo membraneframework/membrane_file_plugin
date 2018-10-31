@@ -34,8 +34,6 @@ defmodule Membrane.Element.File.Sink do
 
   @impl true
   def handle_write(:input, %Buffer{payload: payload}, _ctx, %{fd: fd} = state) do
-    :timer.sleep(30)
-
     with :ok <- mockable(CommonFile).binwrite(fd, payload) do
       {{:ok, demand: :input}, state}
     else
