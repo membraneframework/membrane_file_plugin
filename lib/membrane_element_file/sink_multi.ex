@@ -83,7 +83,9 @@ defmodule Membrane.Element.File.Sink.Multi do
 
   @impl true
   def handle_write(:input, %Buffer{payload: payload}, _ctx, %{fd: fd} = state) do
-    with :ok <- mockable(CommonFile).binwrite(fd, payload) do
+    bin_payload = Membrane.Payload.to_binary(payload)
+
+    with :ok <- mockable(CommonFile).binwrite(fd, bin_payload) do
       {{:ok, demand: :input}, state}
     else
       {:error, reason} -> {{:error, {:write, reason}}, state}
