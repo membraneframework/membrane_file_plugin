@@ -1,7 +1,7 @@
 defmodule Membrane.Element.File.Mixfile do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.2.1"
   @github_url "https://github.com/membraneframework/membrane-element-file"
 
   def project do
@@ -50,7 +50,7 @@ defmodule Membrane.Element.File.Mixfile do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:membrane_core, "~> 0.2.0"},
-      {:bunch, "~> 0.1.2"},
+      {:bunch, "~> 0.1"},
       {:mockery, "~> 2.2", runtime: false}
     ]
   end
