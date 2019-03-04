@@ -7,7 +7,6 @@ defmodule Membrane.Element.File.Source do
   use Membrane.Element.Base.Source
   alias Membrane.{Buffer, Event}
   alias Membrane.Element.File.CommonFile
-  use Bunch
 
   import Mockery.Macro
 
