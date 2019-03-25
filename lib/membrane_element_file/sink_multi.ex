@@ -46,7 +46,7 @@ defmodule Membrane.Element.File.Sink.Multi do
 
   def default_naming_fun(path, i, ext), do: "#{path}#{i}#{ext}"
 
-  def_input_pads input: [demand_unit: :buffers, caps: :any]
+  def_input_pad :input, demand_unit: :buffers, caps: :any
 
   # Private API
 

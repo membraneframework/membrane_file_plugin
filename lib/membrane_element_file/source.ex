@@ -18,7 +18,7 @@ defmodule Membrane.Element.File.Source do
                 description: "Size of chunks being read"
               ]
 
-  def_output_pads output: [caps: :any]
+  def_output_pad :output, caps: :any
 
   # Private API
 

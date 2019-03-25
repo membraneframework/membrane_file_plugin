@@ -11,7 +11,7 @@ defmodule Membrane.Element.File.Sink do
 
   def_options location: [type: :string, description: "Path to the file"]
 
-  def_input_pads input: [demand_unit: :buffers, caps: :any]
+  def_input_pad :input, demand_unit: :buffers, caps: :any
 
   # Private API
 
