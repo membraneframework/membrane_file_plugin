@@ -10,7 +10,7 @@ defmodule Membrane.Element.File.Sink.Multi do
   is passed as atom in `split_on` option.
   It defaults to `:split`.
   """
-  use Membrane.Element.Base.Sink
+  use Membrane.Sink
   alias Membrane.Buffer
   alias Membrane.Element.File.CommonFile
 

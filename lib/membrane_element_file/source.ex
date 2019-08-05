@@ -4,7 +4,7 @@ defmodule Membrane.Element.File.Source do
   through the output pad.
   """
 
-  use Membrane.Element.Base.Source
+  use Membrane.Source
   alias Membrane.{Buffer, Event}
   alias Membrane.Element.File.CommonFile
 
