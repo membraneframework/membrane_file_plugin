@@ -1,6 +1,7 @@
 # Membrane Multimedia Framework: File Element
 
-[![Build Status](https://travis-ci.com/membraneframework/membrane-element-file.svg?branch=master)](https://travis-ci.com/membraneframework/membrane-element-file)
+[![Hex.pm](https://img.shields.io/hexpm/v/membrane_element_file.svg)](https://hex.pm/packages/membrane_element_file)
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane-element-file.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-element-file)
 
 This package provides elements that can be used to read from and write to files.
 
