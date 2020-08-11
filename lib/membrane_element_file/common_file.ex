@@ -3,8 +3,9 @@ defmodule Membrane.Element.File.CommonFile do
 
   def open(location \\ nil, mode, state) do
     location = location || state.location
+    path = Path.expand(location)
 
-    with {:ok, fd} <- File.open(location, [:binary, mode]) do
+    with {:ok, fd} <- File.open(path, [:binary, mode]) do
       {:ok, %{state | fd: fd}}
     else
       {:error, reason} -> {{:error, {:open, reason}}, state}
