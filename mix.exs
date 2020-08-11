@@ -49,7 +49,7 @@ defmodule Membrane.Element.File.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:membrane_core, "~> 0.5.0"},
+      {:membrane_core, "~> 0.5.3"},
       {:mockery, "~> 2.2", runtime: false}
     ]
   end
