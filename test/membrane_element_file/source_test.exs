@@ -6,7 +6,6 @@ defmodule Membrane.Element.File.SourceTest do
   use File.TestSupport.Common
   alias File.CommonFile
   alias Membrane.Buffer
-  alias Membrane.Core.Events
 
   def state(_ctx) do
     %{state: %{location: "", chunk_size: nil, fd: nil}}
@@ -29,7 +28,7 @@ defmodule Membrane.Element.File.SourceTest do
       state = %{state | chunk_size: 5}
       mock(CommonFile, [binread: 2], :eof)
 
-      assert {{:ok, event: {:output, %Events.EndOfStream{}}}, state} ==
+      assert {{:ok, end_of_stream: :output}, state} ==
                @module.handle_demand(:output, nil, :buffers, nil, state)
     end
   end
@@ -47,7 +46,7 @@ defmodule Membrane.Element.File.SourceTest do
     test "should send eos event on eof", %{state: state} do
       mock(CommonFile, [binread: 2], :eof)
 
-      assert {{:ok, event: {:output, %Events.EndOfStream{}}}, state} ==
+      assert {{:ok, end_of_stream: :output}, state} ==
                @module.handle_demand(:output, 5, :bytes, nil, state)
     end
   end

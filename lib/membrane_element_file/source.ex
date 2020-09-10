@@ -6,7 +6,6 @@ defmodule Membrane.Element.File.Source do
 
   use Membrane.Source
   alias Membrane.Buffer
-  alias Membrane.Core.Events
   alias Membrane.Element.File.CommonFile
 
   import Mockery.Macro
@@ -47,7 +46,7 @@ defmodule Membrane.Element.File.Source do
     with <<payload::binary>> <- fd |> mockable(CommonFile).binread(size) do
       {{:ok, [buffer: {:output, %Buffer{payload: payload}}] ++ redemand}, state}
     else
-      :eof -> {{:ok, event: {:output, %Events.EndOfStream{}}}, state}
+      :eof -> {{:ok, end_of_stream: :output}, state}
       {:error, reason} -> {{:error, {:read_file, reason}}, state}
     end
   end
