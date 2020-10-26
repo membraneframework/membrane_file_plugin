@@ -8,6 +8,18 @@ Membrane plugin for reading and writing to files.
 
 It is part of [Membrane Multimedia Framework](https://membraneframework.org).
 
+## Installation
+
+The package can be installed by adding `membrane_file_plugin` to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:membrane_file_plugin, "~> 0.5.0"}
+  ]
+end
+```
+
 ## Sample usage
 
 Playing below pipeline should copy `/etc/passwd` to `./test`:
