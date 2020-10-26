@@ -1,7 +1,7 @@
-defmodule Membrane.Element.File.SourceTest do
+defmodule Membrane.File.SourceTest do
   use ExUnit.Case
   use Mockery
-  alias Membrane.Element.File
+  alias Membrane.File
   @module File.Source
   use File.TestSupport.Common
   alias File.CommonFile

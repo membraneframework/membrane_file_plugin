@@ -1,11 +1,11 @@
-defmodule Membrane.Element.File.Sink do
+defmodule Membrane.File.Sink do
   @moduledoc """
   Element that creates a file and stores incoming buffers there (in binary format).
   """
 
   use Membrane.Sink
   alias Membrane.Buffer
-  alias Membrane.Element.File.CommonFile
+  alias Membrane.File.CommonFile
 
   import Mockery.Macro
 

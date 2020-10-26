@@ -1,7 +1,7 @@
-defmodule Membrane.Element.File.SinkTest do
+defmodule Membrane.File.SinkTest do
   use ExUnit.Case
   use Mockery
-  alias Membrane.Element.File
+  alias Membrane.File
   @module File.Sink
   use File.TestSupport.Common
   alias File.CommonFile

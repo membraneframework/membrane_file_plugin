@@ -1,4 +1,4 @@
-defmodule Membrane.Element.File.Source do
+defmodule Membrane.File.Source do
   @moduledoc """
   Element that reads chunks of data from given file and sends them as buffers
   through the output pad.
@@ -6,7 +6,7 @@ defmodule Membrane.Element.File.Source do
 
   use Membrane.Source
   alias Membrane.Buffer
-  alias Membrane.Element.File.CommonFile
+  alias Membrane.File.CommonFile
 
   import Mockery.Macro
 
