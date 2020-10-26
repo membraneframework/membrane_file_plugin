@@ -11,7 +11,7 @@ defmodule Membrane.File.Plugin.Mixfile do
       version: @version,
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
-      description: "Membrane elements for reading and writing to files",
+      description: "Membrane plugin for reading and writing to files",
       package: package(),
       name: "Membrane File plugin",
       source_url: @github_url,

@@ -4,7 +4,7 @@
 [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/membrane_file_plugin/)
 [![CircleCI](https://circleci.com/gh/membraneframework/membrane_file_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_file_plugin)
 
-This package provides elements that can be used to read from and write to files.
+Membrane plugin for reading and writing to files.
 
 It is part of [Membrane Multimedia Framework](https://membraneframework.org).
 
