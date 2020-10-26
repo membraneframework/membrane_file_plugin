@@ -1,7 +1,7 @@
-defmodule Membrane.Element.File.TestSupport.Common do
+defmodule Membrane.File.TestSupport.Common do
   defmacro __using__(_) do
     quote do
-      alias Membrane.Element.File.CommonFile
+      alias Membrane.File.CommonFile
       alias Membrane.Element.CallbackContext.{Prepare, Stop}
 
       describe "common handle_stopped_to_prepared" do

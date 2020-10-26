@@ -1,7 +1,7 @@
-# Membrane Multimedia Framework: File Element
+# Membrane File plugin
 
-[![Hex.pm](https://img.shields.io/hexpm/v/membrane_element_file.svg)](https://hex.pm/packages/membrane_element_file)
-[![CircleCI](https://circleci.com/gh/membraneframework/membrane-element-file.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-element-file)
+[![Hex.pm](https://img.shields.io/hexpm/v/membrane_file_plugin.svg)](https://hex.pm/packages/membrane_file_plugin)
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane_file_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_file_plugin)
 
 This package provides elements that can be used to read from and write to files.
 
@@ -14,21 +14,17 @@ Playing below pipeline should copy `/etc/passwd` to `./test`:
 ```elixir
 defmodule FileExamplePipeline do
   use Membrane.Pipeline
-  alias Pipeline.Spec
-  alias Membrane.Element.File
 
   @doc false
   @impl true
   def handle_init(_) do
     children = [
-      file_src: %File.Source{location: "/etc/passwd"},
-      file_sink: %File.Sink{location: "./test"},
+      file_src: %Membrane.File.Source{location: "/etc/passwd"},
+      file_sink: %Membrane.File.Sink{location: "./test"},
     ]
-    links = %{
-      {:file_src, :output} => {:file_sink, :input},
-    }
+    links = [link(:file_src) |> to(:file_sink)]
 
-    {{:ok, %Spec{children: children, links: links}}, %{}}
+    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
   end
 end
 

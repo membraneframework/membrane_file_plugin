@@ -1,7 +1,7 @@
-defmodule Membrane.Element.File.Sink.MultiTest do
+defmodule Membrane.File.Sink.MultiTest do
   use ExUnit.Case
   use Mockery
-  alias Membrane.Element.File
+  alias Membrane.File
   alias File.{CommonFile, SplitEvent}
   alias Membrane.Buffer
   @module File.Sink.Multi

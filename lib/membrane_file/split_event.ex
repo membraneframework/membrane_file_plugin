@@ -1,7 +1,7 @@
-defmodule Membrane.Element.File.SplitEvent do
+defmodule Membrane.File.SplitEvent do
   @moduledoc """
   Default event that closes current and opens new file in
-  `Membrane.Element.File.Sink.Multi`.
+  `Membrane.File.Sink.Multi`.
   """
   @derive Membrane.EventProtocol
 

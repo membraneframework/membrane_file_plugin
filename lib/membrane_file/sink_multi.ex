@@ -1,4 +1,4 @@
-defmodule Membrane.Element.File.Sink.Multi do
+defmodule Membrane.File.Sink.Multi do
   @moduledoc """
   Element that writes buffers to a set of files. File is switched on event.
 
@@ -12,7 +12,7 @@ defmodule Membrane.Element.File.Sink.Multi do
   """
   use Membrane.Sink
   alias Membrane.Buffer
-  alias Membrane.Element.File.CommonFile
+  alias Membrane.File.CommonFile
 
   import Mockery.Macro
 
@@ -40,7 +40,7 @@ defmodule Membrane.Element.File.Sink.Multi do
               ],
               split_event: [
                 type: :module,
-                default: Membrane.Element.File.SplitEvent,
+                default: Membrane.File.SplitEvent,
                 description: "Event causing switching to a new file"
               ]
 

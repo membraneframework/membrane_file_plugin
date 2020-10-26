@@ -1,19 +1,19 @@
-defmodule Membrane.Element.File.Mixfile do
+defmodule Membrane.File.Plugin.Mixfile do
   use Mix.Project
 
   @version "0.4.0"
-  @github_url "https://github.com/membraneframework/membrane-element-file"
+  @github_url "https://github.com/membraneframework/membrane_file_plugin"
 
   def project do
     [
-      app: :membrane_element_file,
+      app: :membrane_file_plugin,
       compilers: Mix.compilers(),
       version: @version,
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
-      description: "Membrane Multimedia Framework (File Element)",
+      description: "Membrane elements for reading and writing to files",
       package: package(),
-      name: "Membrane Element: File",
+      name: "Membrane File plugin",
       source_url: @github_url,
       docs: docs(),
       deps: deps()
@@ -21,7 +21,7 @@ defmodule Membrane.Element.File.Mixfile do
   end
 
   def application do
-    [extra_applications: [], mod: {Membrane.Element.File, []}]
+    [extra_applications: []]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]

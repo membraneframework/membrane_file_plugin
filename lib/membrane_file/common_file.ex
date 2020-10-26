@@ -1,4 +1,4 @@
-defmodule Membrane.Element.File.CommonFile do
+defmodule Membrane.File.CommonFile do
   @moduledoc false
 
   def open(location \\ nil, mode, state) do
