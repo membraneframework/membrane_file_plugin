@@ -4,8 +4,11 @@ defmodule Membrane.File.SeekEvent do
   """
   @derive Membrane.EventProtocol
 
+  @type offset_t :: integer()
+  @type position_t :: offset_t() | {:bof | :cur | :eof, offset_t()} | :bof | :cur | :eof
+
   @type t :: %__MODULE__{
-          position: Membrane.File.CommonFile.position_t(),
+          position: position_t(),
           insert?: boolean()
         }
 

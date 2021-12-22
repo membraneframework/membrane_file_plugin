@@ -1,5 +1,7 @@
 defmodule Membrane.File.TestSupport.Common do
-  defmacro __using__(_) do
+  @moduledoc false
+
+  defmacro __using__(module: module) do
     quote do
       alias Membrane.File.CommonFile
       alias Membrane.Element.CallbackContext.{Prepare, Stop}
@@ -10,7 +12,7 @@ defmodule Membrane.File.TestSupport.Common do
 
           mock(CommonFile, [open: 2], fn ^location, _modes -> {:ok, :file} end)
 
-          assert {:ok, %{fd: :file}} = @module.handle_stopped_to_prepared(%{}, state)
+          assert {:ok, %{fd: :file}} = unquote(module).handle_stopped_to_prepared(%{}, state)
         end
       end
 
@@ -20,12 +22,12 @@ defmodule Membrane.File.TestSupport.Common do
         test "should close file", %{state: state} do
           %{fd: fd} = state
           mock(CommonFile, [close: 1], :ok)
-          assert {:ok, %{fd: nil}} = @module.handle_prepared_to_stopped(%{}, state)
+          assert {:ok, %{fd: nil}} = unquote(module).handle_prepared_to_stopped(%{}, state)
           assert_called(CommonFile, :close, [^fd], 1)
         end
       end
 
-      def inject_mock_fd(%{state: state}) do
+      defp inject_mock_fd(%{state: state}) do
         %{state: %{state | fd: :file}}
       end
     end

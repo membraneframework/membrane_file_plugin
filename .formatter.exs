@@ -1,7 +1,8 @@
 [
   inputs: [
     "{lib,test,config}/**/*.{ex,exs}",
-    "mix.exs"
+    ".formatter.exs",
+    "*.exs"
   ],
   import_deps: [:membrane_core]
 ]

@@ -1,10 +1,7 @@
 defmodule Membrane.File.CommonFile do
   @moduledoc false
   alias Membrane.{Buffer, Payload}
-  alias Membrane.File.Error
-
-  @type offset_t :: integer()
-  @type position_t :: offset_t() | {:bof | :cur | :eof, offset_t()} | :bof | :cur | :eof
+  alias Membrane.File.{Error, SeekEvent}
 
   @spec open(String.t(), [File.mode() | :ram]) :: {:ok, File.io_device()} | Error.posix_error_t()
   def open(location, modes), do: File.open(Path.expand(location), [:binary | List.wrap(modes)])
@@ -12,7 +9,7 @@ defmodule Membrane.File.CommonFile do
   @spec write(File.io_device(), Buffer.t()) :: :ok | Error.posix_error_t()
   def write(fd, %Buffer{payload: payload}), do: IO.binwrite(fd, Payload.to_binary(payload))
 
-  @spec seek(File.io_device(), position_t()) :: :ok | Error.generic_error_t()
+  @spec seek(File.io_device(), SeekEvent.position_t()) :: :ok | Error.generic_error_t()
   def seek(fd, position), do: :file.position(fd, position)
 
   @spec copy(File.io_device(), File.io_device()) :: :ok | Error.generic_error_t()

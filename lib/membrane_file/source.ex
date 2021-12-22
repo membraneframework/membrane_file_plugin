@@ -3,24 +3,23 @@ defmodule Membrane.File.Source do
   Element that reads chunks of data from given file and sends them as buffers
   through the output pad.
   """
-
   use Membrane.Source
+  import Mockery.Macro
+
   alias Membrane.Buffer
   alias Membrane.File.{CommonFile, Error}
 
-  import Mockery.Macro
-
-  def_options location: [type: :string, description: "Path to the file"],
+  def_options location: [
+                spec: String.t(),
+                description: "Path to the file"
+              ],
               chunk_size: [
-                type: :integer,
-                spec: pos_integer,
+                spec: pos_integer(),
                 default: 2048,
                 description: "Size of chunks being read"
               ]
 
   def_output_pad :output, caps: :any
-
-  # Private API
 
   @impl true
   def handle_init(%__MODULE__{location: location, chunk_size: size}) do
@@ -47,7 +46,7 @@ defmodule Membrane.File.Source do
   def handle_demand(:output, size, :bytes, _ctx, state),
     do: supply_demand(size, [], state)
 
-  def supply_demand(size, redemand, %{fd: fd} = state) do
+  defp supply_demand(size, redemand, %{fd: fd} = state) do
     case mockable(CommonFile).binread(fd, size) do
       <<payload::binary>> ->
         {{:ok, [buffer: {:output, %Buffer{payload: payload}}] ++ redemand}, state}

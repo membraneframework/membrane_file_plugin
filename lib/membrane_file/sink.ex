@@ -2,11 +2,10 @@ defmodule Membrane.File.Sink do
   @moduledoc """
   Element that creates a file and stores incoming buffers there (in binary format).
   """
-
   use Membrane.Sink
-  alias Membrane.File.{CommonFile, Error, SeekEvent}
-
   import Mockery.Macro
+
+  alias Membrane.File.{CommonFile, Error, SeekEvent}
 
   def_options location: [
                 spec: String.t(),
@@ -52,7 +51,6 @@ defmodule Membrane.File.Sink do
     if insert?, do: split_file(position, state), else: seek_file(position, state)
   end
 
-  @impl true
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
@@ -67,17 +65,17 @@ defmodule Membrane.File.Sink do
 
   defp seek_file(position, %{fd: fd} = state) do
     with {:ok, state} <- maybe_merge_temporary(state),
-         :ok <- mockable(CommonFile).seek(fd, position) do
+         {:ok, _position} <- mockable(CommonFile).seek(fd, position) do
       {:ok, state}
     else
       error -> Error.wrap_error(error, :seek_file, state)
     end
   end
 
-  defp split_file(position, %{fd: fd, temp_fd: temp_fd} = state) do
+  defp split_file(position, %{fd: fd} = state) do
     with {:ok, state} <- seek_file(position, state),
          {:ok, state} <- open_temporary(state),
-         :ok <- mockable(CommonFile).split(fd, temp_fd) do
+         :ok <- mockable(CommonFile).split(fd, state.temp_fd) do
       {:ok, state}
     else
       error -> Error.wrap_error(error, :split_file, state)
@@ -104,7 +102,7 @@ defmodule Membrane.File.Sink do
 
   defp remove_temporary(%{temp_fd: temp_fd, temp_location: temp_location} = state) do
     with :ok <- mockable(CommonFile).close(temp_fd),
-         :ok <- mockable(CommonFile).rm(temp_location) do
+         :ok <- mockable(CommonFile).remove(temp_location) do
       {:ok, %{state | temp_fd: nil}}
     else
       error -> Error.wrap_error(error, :remove_temporary, state)

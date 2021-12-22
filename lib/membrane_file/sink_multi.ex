@@ -11,16 +11,16 @@ defmodule Membrane.File.Sink.Multi do
   It defaults to `:split`.
   """
   use Membrane.Sink
-  alias Membrane.File.{CommonFile, Error}
-
   import Mockery.Macro
 
+  alias Membrane.File.{CommonFile, Error}
+
   def_options location: [
-                type: :string,
+                spec: String.t(),
                 description: "Base path to the file, will be passed to the naming function"
               ],
               extension: [
-                type: :string,
+                spec: String.t(),
                 default: "",
                 description: """
                 Extension of the file, should be preceeded with dot (.). It is
@@ -28,7 +28,6 @@ defmodule Membrane.File.Sink.Multi do
                 """
               ],
               naming_fun: [
-                type: :function,
                 spec: (String.t(), non_neg_integer, String.t() -> String.t()),
                 default: &__MODULE__.default_naming_fun/3,
                 description: """
@@ -38,16 +37,15 @@ defmodule Membrane.File.Sink.Multi do
                 """
               ],
               split_event: [
-                type: :module,
+                spec: module(),
                 default: Membrane.File.SplitEvent,
                 description: "Event causing switching to a new file"
               ]
 
+  @spec default_naming_fun(String.t(), non_neg_integer(), String.t()) :: String.t()
   def default_naming_fun(path, i, ext), do: "#{path}#{i}#{ext}"
 
   def_input_pad :input, demand_unit: :buffers, caps: :any
-
-  # Private API
 
   @impl true
   def handle_init(%__MODULE__{} = options) do
@@ -78,7 +76,6 @@ defmodule Membrane.File.Sink.Multi do
     end
   end
 
-  @impl true
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true

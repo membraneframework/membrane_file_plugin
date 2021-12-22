@@ -1,13 +1,14 @@
 defmodule Membrane.File.SinkTest do
   use ExUnit.Case
   use Mockery
-  alias Membrane.File
-  @module File.Sink
-  use File.TestSupport.Common
-  alias File.CommonFile
-  alias Membrane.Buffer
+  use Membrane.File.TestSupport.Common, module: Membrane.File.Sink
 
-  def state(_ctx) do
+  alias Membrane.Buffer
+  alias Membrane.File.CommonFile
+
+  @module Membrane.File.Sink
+
+  defp state(_ctx) do
     %{state: %{location: "", fd: nil, temp_fd: nil}}
   end
 

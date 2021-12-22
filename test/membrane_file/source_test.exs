@@ -1,13 +1,14 @@
 defmodule Membrane.File.SourceTest do
   use ExUnit.Case
   use Mockery
-  alias Membrane.File
-  @module File.Source
-  use File.TestSupport.Common
-  alias File.CommonFile
+  use Membrane.File.TestSupport.Common, module: Membrane.File.Source
+
+  alias Membrane.File.CommonFile
   alias Membrane.Buffer
 
-  def state(_ctx) do
+  @module Membrane.File.Source
+
+  defp state(_ctx) do
     %{state: %{location: "", chunk_size: nil, fd: nil}}
   end
 

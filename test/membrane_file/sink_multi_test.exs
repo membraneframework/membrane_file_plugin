@@ -1,18 +1,19 @@
 defmodule Membrane.File.Sink.MultiTest do
   use ExUnit.Case
   use Mockery
-  alias Membrane.File
-  alias File.{CommonFile, SplitEvent}
-  alias Membrane.Buffer
-  @module File.Sink.Multi
-  use File.TestSupport.Common
+  use Membrane.File.TestSupport.Common, module: Membrane.File.Sink.Multi
 
-  def state(_ctx) do
+  alias Membrane.File.{CommonFile, SplitEvent}
+  alias Membrane.Buffer
+
+  @module Membrane.File.Sink.Multi
+
+  defp state(_ctx) do
     %{
       state: %{
         location: "",
         fd: nil,
-        naming_fun: fn _ -> "" end,
+        naming_fun: fn _index -> "" end,
         split_on: SplitEvent,
         index: 0
       }
