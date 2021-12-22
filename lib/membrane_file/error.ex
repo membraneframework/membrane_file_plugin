@@ -1,5 +1,6 @@
 defmodule Membrane.File.Error do
   @moduledoc false
+
   @type posix_error_t() :: {:error, File.posix()}
   @type generic_error_t() :: {:error, File.posix() | :badarg | :terminated}
 

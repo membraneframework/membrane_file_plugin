@@ -1,5 +1,6 @@
 defmodule Membrane.File.CommonFile do
   @moduledoc false
+
   alias Membrane.{Buffer, Payload}
   alias Membrane.File.{Error, SeekEvent}
 

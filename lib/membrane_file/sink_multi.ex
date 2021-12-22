@@ -2,13 +2,12 @@ defmodule Membrane.File.Sink.Multi do
   @moduledoc """
   Element that writes buffers to a set of files. File is switched on event.
 
-  Files are named according to naming_fun passed in options.
+  Files are named according to `naming_fun` passed in options.
   This function receives sequential number of file and should return string.
-  It defaults to file000, file001, ...
+  It defaults to `path/to/file0.ext`, `path/to/file1.ext`, ...
 
-  The event type, which starts writing to a next file,
-  is passed as atom in `split_on` option.
-  It defaults to `:split`.
+  The event type, which starts writing to a next file is passed by `split_event` option.
+  It defaults to `Membrane.File.SplitEvent`.
   """
   use Membrane.Sink
   import Mockery.Macro
@@ -37,7 +36,7 @@ defmodule Membrane.File.Sink.Multi do
                 """
               ],
               split_event: [
-                spec: module(),
+                spec: Membrane.Event.t(),
                 default: Membrane.File.SplitEvent,
                 description: "Event causing switching to a new file"
               ]

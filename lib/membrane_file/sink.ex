@@ -1,6 +1,11 @@
 defmodule Membrane.File.Sink do
   @moduledoc """
   Element that creates a file and stores incoming buffers there (in binary format).
+
+  When `Membrane.File.SeekEvent` is received, the element starts writing buffers starting
+  from `position`. By default, it overwrites previously stored bytes. You can set `insert?`
+  field of the event to `true` to start inserting new buffers without overwriting previous ones.
+  Please note, that inserting requires rewriting the file, what negatively impacts performance.
   """
   use Membrane.Sink
   import Mockery.Macro
