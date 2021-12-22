@@ -8,21 +8,24 @@ defmodule Membrane.File.SinkTest do
   alias Membrane.Buffer
 
   def state(_ctx) do
-    %{state: %{location: "", fd: nil}}
+    %{state: %{location: "", fd: nil, temp_fd: nil}}
   end
 
   setup_all :state
 
   describe "handle_write" do
-    setup :file
+    setup :inject_mock_fd
 
     test "should write received chunk and request demand", %{state: state} do
-      mock(CommonFile, [binwrite: 2], fn _file, _data -> :ok end)
+      %{fd: file} = state
+
+      mock(CommonFile, [write: 2], :ok)
+      buffer = %Buffer{payload: <<1, 2, 3>>}
 
       assert {{:ok, demand: :input}, state} ==
-               @module.handle_write(:input, %Buffer{payload: <<1, 2, 3>>}, nil, state)
+               @module.handle_write(:input, buffer, nil, state)
 
-      assert_called(CommonFile, :binwrite, [_file, <<1, 2, 3>>], 1)
+      assert_called(CommonFile, :write, [^file, ^buffer], 1)
     end
   end
 end

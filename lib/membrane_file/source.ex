@@ -6,7 +6,7 @@ defmodule Membrane.File.Source do
 
   use Membrane.Source
   alias Membrane.Buffer
-  alias Membrane.File.CommonFile
+  alias Membrane.File.{CommonFile, Error}
 
   import Mockery.Macro
 
@@ -33,7 +33,12 @@ defmodule Membrane.File.Source do
   end
 
   @impl true
-  def handle_stopped_to_prepared(_ctx, state), do: mockable(CommonFile).open(:read, state)
+  def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
+    case mockable(CommonFile).open(location, :read) do
+      {:ok, fd} -> {:ok, %{state | fd: fd}}
+      error -> Error.wrap_error(error, :open, state)
+    end
+  end
 
   @impl true
   def handle_demand(:output, _size, :buffers, _ctx, %{chunk_size: chunk_size} = state),
@@ -43,14 +48,23 @@ defmodule Membrane.File.Source do
     do: supply_demand(size, [], state)
 
   def supply_demand(size, redemand, %{fd: fd} = state) do
-    with <<payload::binary>> <- fd |> mockable(CommonFile).binread(size) do
-      {{:ok, [buffer: {:output, %Buffer{payload: payload}}] ++ redemand}, state}
-    else
-      :eof -> {{:ok, end_of_stream: :output}, state}
-      {:error, reason} -> {{:error, {:read_file, reason}}, state}
+    case mockable(CommonFile).binread(fd, size) do
+      <<payload::binary>> ->
+        {{:ok, [buffer: {:output, %Buffer{payload: payload}}] ++ redemand}, state}
+
+      :eof ->
+        {{:ok, end_of_stream: :output}, state}
+
+      error ->
+        Error.wrap_error(error, :read_file, state)
     end
   end
 
   @impl true
-  def handle_prepared_to_stopped(_ctx, state), do: mockable(CommonFile).close(state)
+  def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
+    case mockable(CommonFile).close(fd) do
+      :ok -> {:ok, %{state | fd: nil}}
+      error -> Error.wrap_error(error, :close, state)
+    end
+  end
 end

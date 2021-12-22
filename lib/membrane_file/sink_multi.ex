@@ -11,8 +11,7 @@ defmodule Membrane.File.Sink.Multi do
   It defaults to `:split`.
   """
   use Membrane.Sink
-  alias Membrane.Buffer
-  alias Membrane.File.CommonFile
+  alias Membrane.File.{CommonFile, Error}
 
   import Mockery.Macro
 
@@ -62,9 +61,7 @@ defmodule Membrane.File.Sink.Multi do
   end
 
   @impl true
-  def handle_stopped_to_prepared(_ctx, state) do
-    mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
-  end
+  def handle_stopped_to_prepared(_ctx, state), do: open(state)
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
@@ -73,28 +70,39 @@ defmodule Membrane.File.Sink.Multi do
 
   @impl true
   def handle_event(:input, %split_on{}, _ctx, %{split_on: split_on} = state) do
-    with {:ok, state} <- state |> mockable(CommonFile).close do
-      state = state |> Map.update!(:index, &(&1 + 1))
-      mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
+    with {:ok, state} <- close(state),
+         {:ok, state} <- open(state) do
+      {:ok, state}
+    else
+      error -> Error.wrap_error(error, :split, state)
     end
   end
 
+  @impl true
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
-  def handle_write(:input, %Buffer{payload: payload}, _ctx, %{fd: fd} = state) do
-    bin_payload = Membrane.Payload.to_binary(payload)
-
-    with :ok <- mockable(CommonFile).binwrite(fd, bin_payload) do
-      {{:ok, demand: :input}, state}
-    else
-      {:error, reason} -> {{:error, {:write, reason}}, state}
+  def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
+    case mockable(CommonFile).write(fd, buffer) do
+      :ok -> {{:ok, demand: :input}, state}
+      error -> Error.wrap_error(error, :write, state)
     end
   end
 
   @impl true
-  def handle_prepared_to_stopped(_ctx, state) do
-    state = state |> Map.update!(:index, &(&1 + 1))
-    state |> mockable(CommonFile).close
+  def handle_prepared_to_stopped(_ctx, state), do: close(state)
+
+  defp open(%{naming_fun: naming_fun, index: index} = state) do
+    case mockable(CommonFile).open(naming_fun.(index), :write) do
+      {:ok, fd} -> {:ok, %{state | fd: fd}}
+      error -> Error.wrap_error(error, :open, state)
+    end
+  end
+
+  defp close(%{fd: fd, index: index} = state) do
+    case mockable(CommonFile).close(fd) do
+      :ok -> {:ok, %{state | fd: nil, index: index + 1}}
+      error -> Error.wrap_error(error, :close, state)
+    end
   end
 end

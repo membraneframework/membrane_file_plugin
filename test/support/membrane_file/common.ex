@@ -8,27 +8,24 @@ defmodule Membrane.File.TestSupport.Common do
         test "should open file", %{state: state} do
           %{location: location} = state
 
-          mock(CommonFile, [open: 3], fn ^location, _mode, state ->
-            {:ok, %{state | fd: location}}
-          end)
+          mock(CommonFile, [open: 2], fn ^location, _modes -> {:ok, :file} end)
 
-          mock(CommonFile, [open: 2], fn _mode, state -> {:ok, %{state | fd: state.location}} end)
-          assert {:ok, %{fd: ^location}} = @module.handle_stopped_to_prepared(%{}, state)
+          assert {:ok, %{fd: :file}} = @module.handle_stopped_to_prepared(%{}, state)
         end
       end
 
       describe "common handle_prepared_to_stopped" do
-        setup :file
+        setup :inject_mock_fd
 
         test "should close file", %{state: state} do
           %{fd: fd} = state
-          mock(CommonFile, [close: 1], fn state -> {:ok, %{state | fd: nil}} end)
+          mock(CommonFile, [close: 1], :ok)
           assert {:ok, %{fd: nil}} = @module.handle_prepared_to_stopped(%{}, state)
-          assert_called(CommonFile, :close, [%{fd: ^fd}], 1)
+          assert_called(CommonFile, :close, [^fd], 1)
         end
       end
 
-      def file(%{state: state}) do
+      def inject_mock_fd(%{state: state}) do
         %{state: %{state | fd: :file}}
       end
     end
