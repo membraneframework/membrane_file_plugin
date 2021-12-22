@@ -59,7 +59,7 @@ defmodule Membrane.File.Plugin.Mixfile do
       main: "readme",
       extras: ["README.md", "LICENSE"],
       source_ref: "v#{@version}",
-      nest_modules_by_prefix: [Membrane.Template]
+      nest_modules_by_prefix: [Membrane.File]
     ]
   end
 end
