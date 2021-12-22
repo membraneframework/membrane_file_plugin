@@ -71,7 +71,7 @@ defmodule Membrane.File.Sink.Multi do
          {:ok, state} <- open(state) do
       {:ok, state}
     else
-      error -> Error.wrap_error(error, :split, state)
+      error -> Error.wrap(error, :split, state)
     end
   end
 
@@ -81,7 +81,7 @@ defmodule Membrane.File.Sink.Multi do
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
     case mockable(CommonFile).write(fd, buffer) do
       :ok -> {{:ok, demand: :input}, state}
-      error -> Error.wrap_error(error, :write, state)
+      error -> Error.wrap(error, :write, state)
     end
   end
 
@@ -91,14 +91,14 @@ defmodule Membrane.File.Sink.Multi do
   defp open(%{naming_fun: naming_fun, index: index} = state) do
     case mockable(CommonFile).open(naming_fun.(index), :write) do
       {:ok, fd} -> {:ok, %{state | fd: fd}}
-      error -> Error.wrap_error(error, :open, state)
+      error -> Error.wrap(error, :open, state)
     end
   end
 
   defp close(%{fd: fd, index: index} = state) do
     case mockable(CommonFile).close(fd) do
       :ok -> {:ok, %{state | fd: nil, index: index + 1}}
-      error -> Error.wrap_error(error, :close, state)
+      error -> Error.wrap(error, :close, state)
     end
   end
 end

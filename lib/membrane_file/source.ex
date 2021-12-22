@@ -35,7 +35,7 @@ defmodule Membrane.File.Source do
   def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
     case mockable(CommonFile).open(location, :read) do
       {:ok, fd} -> {:ok, %{state | fd: fd}}
-      error -> Error.wrap_error(error, :open, state)
+      error -> Error.wrap(error, :open, state)
     end
   end
 
@@ -55,7 +55,7 @@ defmodule Membrane.File.Source do
         {{:ok, end_of_stream: :output}, state}
 
       error ->
-        Error.wrap_error(error, :read_file, state)
+        Error.wrap(error, :read_file, state)
     end
   end
 
@@ -63,7 +63,7 @@ defmodule Membrane.File.Source do
   def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
     case mockable(CommonFile).close(fd) do
       :ok -> {:ok, %{state | fd: nil}}
-      error -> Error.wrap_error(error, :close, state)
+      error -> Error.wrap(error, :close, state)
     end
   end
 end

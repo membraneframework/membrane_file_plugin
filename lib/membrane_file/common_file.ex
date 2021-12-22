@@ -17,10 +17,10 @@ defmodule Membrane.File.CommonFile do
   def copy(source_fd, destination_fd) do
     with {:ok, src_position} <- :file.position(source_fd, :cur),
          {:ok, dst_position} <- :file.position(destination_fd, :cur),
-         {:ok, _bytes_copied} <- :file.copy(source_fd, destination_fd),
+         {:ok, bytes_copied} <- :file.copy(source_fd, destination_fd),
          {:ok, _src_position} <- :file.position(source_fd, src_position),
          {:ok, _dst_position} <- :file.position(destination_fd, dst_position) do
-      :ok
+      {:ok, bytes_copied}
     else
       {:error, reason} -> {:error, reason}
     end
@@ -28,7 +28,7 @@ defmodule Membrane.File.CommonFile do
 
   @spec split(File.io_device(), File.io_device()) :: :ok | Error.generic_error_t()
   def split(source_fd, destination_fd) do
-    with :ok <- copy(source_fd, destination_fd),
+    with {:ok, _bytes_copied} <- copy(source_fd, destination_fd),
          :ok <- :file.truncate(source_fd) do
       :ok
     else
