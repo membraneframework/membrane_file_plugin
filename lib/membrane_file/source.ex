@@ -10,7 +10,7 @@ defmodule Membrane.File.Source do
   alias Membrane.File.{CommonFile, Error}
 
   def_options location: [
-                spec: String.t(),
+                spec: Path.t(),
                 description: "Path to the file"
               ],
               chunk_size: [
@@ -25,7 +25,7 @@ defmodule Membrane.File.Source do
   def handle_init(%__MODULE__{location: location, chunk_size: size}) do
     {:ok,
      %{
-       location: location,
+       location: Path.expand(location),
        chunk_size: size,
        fd: nil
      }}

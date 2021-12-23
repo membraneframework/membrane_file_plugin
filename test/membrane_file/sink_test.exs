@@ -50,7 +50,7 @@ defmodule Membrane.File.SinkTest do
     test "should change file descriptor position and split file if insertion is enabled", %{
       state: state
     } do
-      %{fd: file} = state
+      %{fd: file, temp_location: temp_location} = state
       position = {:bof, 32}
 
       mock(CommonFile, [open: 2], {:ok, :temporary})
@@ -65,7 +65,7 @@ defmodule Membrane.File.SinkTest do
                  state
                )
 
-      assert_called(CommonFile, :open, [_tmp_location, _modes], 1)
+      assert_called(CommonFile, :open, [^temp_location, _modes], 1)
       assert_called(CommonFile, :seek, [^file, ^position], 1)
       assert_called(CommonFile, :split, [^file, :temporary], 1)
     end
@@ -92,7 +92,7 @@ defmodule Membrane.File.SinkTest do
 
       mock(CommonFile, [copy: 2], {:ok, 0})
       mock(CommonFile, [close: 1], :ok)
-      mock(CommonFile, [remove: 1], :ok)
+      mock(CommonFile, [rm: 1], :ok)
       mock(CommonFile, [seek: 2], {:ok, 32})
 
       assert {:ok, %{state | fd: file, temp_fd: nil}} ==
@@ -100,7 +100,7 @@ defmodule Membrane.File.SinkTest do
 
       assert_called(CommonFile, :copy, [:temporary, ^file], 1)
       assert_called(CommonFile, :close, [:temporary], 1)
-      assert_called(CommonFile, :remove, [^temp_location], 1)
+      assert_called(CommonFile, :rm, [^temp_location], 1)
       assert_called(CommonFile, :seek, [^file, ^position], 1)
     end
   end
@@ -124,14 +124,14 @@ defmodule Membrane.File.SinkTest do
 
       mock(CommonFile, [copy: 2], {:ok, 0})
       mock(CommonFile, [close: 1], :ok)
-      mock(CommonFile, [remove: 1], :ok)
+      mock(CommonFile, [rm: 1], :ok)
 
       assert {:ok, %{state | fd: nil, temp_fd: nil}} ==
                @module.handle_prepared_to_stopped(nil, state)
 
       assert_called(CommonFile, :copy, [:temporary, ^file], 1)
       assert_called(CommonFile, :close, [:temporary], 1)
-      assert_called(CommonFile, :remove, [^temp_location], 1)
+      assert_called(CommonFile, :rm, [^temp_location], 1)
       assert_called(CommonFile, :close, [^file], 1)
     end
   end

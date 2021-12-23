@@ -15,7 +15,7 @@ defmodule Membrane.File.Sink.Multi do
   alias Membrane.File.{CommonFile, Error}
 
   def_options location: [
-                spec: String.t(),
+                spec: Path.t(),
                 description: "Base path to the file, will be passed to the naming function"
               ],
               extension: [
@@ -27,7 +27,7 @@ defmodule Membrane.File.Sink.Multi do
                 """
               ],
               naming_fun: [
-                spec: (String.t(), non_neg_integer, String.t() -> String.t()),
+                spec: (Path.t(), non_neg_integer, String.t() -> Path.t()),
                 default: &__MODULE__.default_naming_fun/3,
                 description: """
                 Function accepting base path, sequential number and file extension,
@@ -41,8 +41,8 @@ defmodule Membrane.File.Sink.Multi do
                 description: "Event causing switching to a new file"
               ]
 
-  @spec default_naming_fun(String.t(), non_neg_integer(), String.t()) :: String.t()
-  def default_naming_fun(path, i, ext), do: "#{path}#{i}#{ext}"
+  @spec default_naming_fun(Path.t(), non_neg_integer(), String.t()) :: Path.t()
+  def default_naming_fun(path, i, ext), do: [path, i, ext] |> Enum.join() |> Path.expand()
 
   def_input_pad :input, demand_unit: :buffers, caps: :any
 
