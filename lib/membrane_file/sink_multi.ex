@@ -2,26 +2,24 @@ defmodule Membrane.File.Sink.Multi do
   @moduledoc """
   Element that writes buffers to a set of files. File is switched on event.
 
-  Files are named according to naming_fun passed in options.
+  Files are named according to `naming_fun` passed in options.
   This function receives sequential number of file and should return string.
-  It defaults to file000, file001, ...
+  It defaults to `path/to/file0.ext`, `path/to/file1.ext`, ...
 
-  The event type, which starts writing to a next file,
-  is passed as atom in `split_on` option.
-  It defaults to `:split`.
+  The event type, which starts writing to a next file is passed by `split_event` option.
+  It defaults to `Membrane.File.SplitEvent`.
   """
   use Membrane.Sink
-  alias Membrane.Buffer
-  alias Membrane.File.CommonFile
-
   import Mockery.Macro
 
+  alias Membrane.File.{CommonFile, Error}
+
   def_options location: [
-                type: :string,
+                spec: Path.t(),
                 description: "Base path to the file, will be passed to the naming function"
               ],
               extension: [
-                type: :string,
+                spec: String.t(),
                 default: "",
                 description: """
                 Extension of the file, should be preceeded with dot (.). It is
@@ -29,8 +27,7 @@ defmodule Membrane.File.Sink.Multi do
                 """
               ],
               naming_fun: [
-                type: :function,
-                spec: (String.t(), non_neg_integer, String.t() -> String.t()),
+                spec: (Path.t(), non_neg_integer, String.t() -> Path.t()),
                 default: &__MODULE__.default_naming_fun/3,
                 description: """
                 Function accepting base path, sequential number and file extension,
@@ -39,16 +36,15 @@ defmodule Membrane.File.Sink.Multi do
                 """
               ],
               split_event: [
-                type: :module,
+                spec: Membrane.Event.t(),
                 default: Membrane.File.SplitEvent,
                 description: "Event causing switching to a new file"
               ]
 
-  def default_naming_fun(path, i, ext), do: "#{path}#{i}#{ext}"
+  @spec default_naming_fun(Path.t(), non_neg_integer(), String.t()) :: Path.t()
+  def default_naming_fun(path, i, ext), do: [path, i, ext] |> Enum.join() |> Path.expand()
 
   def_input_pad :input, demand_unit: :buffers, caps: :any
-
-  # Private API
 
   @impl true
   def handle_init(%__MODULE__{} = options) do
@@ -62,9 +58,7 @@ defmodule Membrane.File.Sink.Multi do
   end
 
   @impl true
-  def handle_stopped_to_prepared(_ctx, state) do
-    mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
-  end
+  def handle_stopped_to_prepared(_ctx, state), do: open(state)
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
@@ -73,28 +67,38 @@ defmodule Membrane.File.Sink.Multi do
 
   @impl true
   def handle_event(:input, %split_on{}, _ctx, %{split_on: split_on} = state) do
-    with {:ok, state} <- state |> mockable(CommonFile).close do
-      state = state |> Map.update!(:index, &(&1 + 1))
-      mockable(CommonFile).open(state.naming_fun.(state.index), :write, state)
+    with {:ok, state} <- close(state),
+         {:ok, state} <- open(state) do
+      {:ok, state}
+    else
+      error -> Error.wrap(error, :split, state)
     end
   end
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
-  def handle_write(:input, %Buffer{payload: payload}, _ctx, %{fd: fd} = state) do
-    bin_payload = Membrane.Payload.to_binary(payload)
-
-    with :ok <- mockable(CommonFile).binwrite(fd, bin_payload) do
-      {{:ok, demand: :input}, state}
-    else
-      {:error, reason} -> {{:error, {:write, reason}}, state}
+  def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
+    case mockable(CommonFile).write(fd, buffer) do
+      :ok -> {{:ok, demand: :input}, state}
+      error -> Error.wrap(error, :write, state)
     end
   end
 
   @impl true
-  def handle_prepared_to_stopped(_ctx, state) do
-    state = state |> Map.update!(:index, &(&1 + 1))
-    state |> mockable(CommonFile).close
+  def handle_prepared_to_stopped(_ctx, state), do: close(state)
+
+  defp open(%{naming_fun: naming_fun, index: index} = state) do
+    case mockable(CommonFile).open(naming_fun.(index), :write) do
+      {:ok, fd} -> {:ok, %{state | fd: fd}}
+      error -> Error.wrap(error, :open, state)
+    end
+  end
+
+  defp close(%{fd: fd, index: index} = state) do
+    case mockable(CommonFile).close(fd) do
+      :ok -> {:ok, %{state | fd: nil, index: index + 1}}
+      error -> Error.wrap(error, :close, state)
+    end
   end
 end

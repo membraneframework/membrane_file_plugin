@@ -1,3 +1,3 @@
-use Mix.Config
+import Config
 
 config :mockery, history: true

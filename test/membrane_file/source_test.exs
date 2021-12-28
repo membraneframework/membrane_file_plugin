@@ -1,20 +1,21 @@
 defmodule Membrane.File.SourceTest do
   use ExUnit.Case
   use Mockery
-  alias Membrane.File
-  @module File.Source
-  use File.TestSupport.Common
-  alias File.CommonFile
+  use Membrane.File.TestSupport.Common, module: Membrane.File.Source
+
+  alias Membrane.File.CommonFile
   alias Membrane.Buffer
 
-  def state(_ctx) do
+  @module Membrane.File.Source
+
+  defp state(_ctx) do
     %{state: %{location: "", chunk_size: nil, fd: nil}}
   end
 
   setup_all :state
 
   describe "handle_demand buffers" do
-    setup :file
+    setup :inject_mock_fd
 
     test "should send chunk of size state.chunk_size", %{state: state} do
       state = %{state | chunk_size: 5}
@@ -34,8 +35,6 @@ defmodule Membrane.File.SourceTest do
   end
 
   describe "handle_demand bytes" do
-    setup :file
-
     test "should send chunk of given size when demand in bytes", %{state: state} do
       mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2, 3, 4, 5>> end)
 
