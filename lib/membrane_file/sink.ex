@@ -9,7 +9,6 @@ defmodule Membrane.File.Sink do
   For more information refer to `Membrane.File.SeekEvent` moduledoc.
   """
   use Membrane.Sink
-  import Mockery.Macro
 
   alias Membrane.File.{CommonFile, Error, SeekEvent}
 
@@ -33,8 +32,8 @@ defmodule Membrane.File.Sink do
 
   @impl true
   def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
-    with {:ok, fd} <- mockable(CommonFile).open(location, [:read, :write]),
-         :ok <- mockable(CommonFile).truncate(fd) do
+    with {:ok, fd} <- CommonFile.open(location, [:read, :write]),
+         :ok <- CommonFile.truncate(fd) do
       {:ok, %{state | fd: fd}}
     else
       error -> Error.wrap(error, :open, state)
@@ -48,7 +47,7 @@ defmodule Membrane.File.Sink do
 
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
-    case mockable(CommonFile).write(fd, buffer) do
+    case CommonFile.write(fd, buffer) do
       :ok -> {{:ok, demand: :input}, state}
       error -> Error.wrap(error, :write, state)
     end
@@ -68,7 +67,7 @@ defmodule Membrane.File.Sink do
   @impl true
   def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
     with {:ok, state} <- maybe_merge_temporary(state),
-         :ok <- mockable(CommonFile).close(fd) do
+         :ok <- CommonFile.close(fd) do
       {:ok, %{state | fd: nil}}
     else
       error -> Error.wrap(error, :close, state)
@@ -77,7 +76,7 @@ defmodule Membrane.File.Sink do
 
   defp seek_file(position, %{fd: fd} = state) do
     with {:ok, state} <- maybe_merge_temporary(state),
-         {:ok, _position} <- mockable(CommonFile).seek(fd, position) do
+         {:ok, _position} <- CommonFile.seek(fd, position) do
       {:ok, state}
     else
       error -> Error.wrap(error, :seek_file, state)
@@ -87,7 +86,7 @@ defmodule Membrane.File.Sink do
   defp split_file(position, %{fd: fd} = state) do
     with {:ok, state} <- seek_file(position, state),
          {:ok, state} <- open_temporary(state),
-         :ok <- mockable(CommonFile).split(fd, state.temp_fd) do
+         :ok <- CommonFile.split(fd, state.temp_fd) do
       {:ok, state}
     else
       error -> Error.wrap(error, :split_file, state)
@@ -99,7 +98,7 @@ defmodule Membrane.File.Sink do
   defp maybe_merge_temporary(%{fd: fd, temp_fd: temp_fd} = state) do
     # TODO: Consider improving performance for multi-insertion scenarios by using
     # multiple temporary files and merging them only once on `handle_prepared_to_stopped/2`.
-    with {:ok, _bytes_copied} <- mockable(CommonFile).copy(temp_fd, fd),
+    with {:ok, _bytes_copied} <- CommonFile.copy(temp_fd, fd),
          {:ok, state} <- remove_temporary(state) do
       {:ok, state}
     else
@@ -108,15 +107,15 @@ defmodule Membrane.File.Sink do
   end
 
   defp open_temporary(%{temp_fd: nil, temp_location: temp_location} = state) do
-    case mockable(CommonFile).open(temp_location, [:read, :exclusive]) do
+    case CommonFile.open(temp_location, [:read, :exclusive]) do
       {:ok, temp_fd} -> {:ok, %{state | temp_fd: temp_fd}}
       error -> Error.wrap(error, :open_temporary, state)
     end
   end
 
   defp remove_temporary(%{temp_fd: temp_fd, temp_location: temp_location} = state) do
-    with :ok <- mockable(CommonFile).close(temp_fd),
-         :ok <- mockable(CommonFile).rm(temp_location) do
+    with :ok <- CommonFile.close(temp_fd),
+         :ok <- CommonFile.rm(temp_location) do
       {:ok, %{state | temp_fd: nil}}
     else
       error -> Error.wrap(error, :remove_temporary, state)

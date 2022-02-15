@@ -10,7 +10,6 @@ defmodule Membrane.File.Sink.Multi do
   It defaults to `Membrane.File.SplitEvent`.
   """
   use Membrane.Sink
-  import Mockery.Macro
 
   alias Membrane.File.{CommonFile, Error}
 
@@ -79,7 +78,7 @@ defmodule Membrane.File.Sink.Multi do
 
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
-    case mockable(CommonFile).write(fd, buffer) do
+    case CommonFile.write(fd, buffer) do
       :ok -> {{:ok, demand: :input}, state}
       error -> Error.wrap(error, :write, state)
     end
@@ -89,14 +88,14 @@ defmodule Membrane.File.Sink.Multi do
   def handle_prepared_to_stopped(_ctx, state), do: close(state)
 
   defp open(%{naming_fun: naming_fun, index: index} = state) do
-    case mockable(CommonFile).open(naming_fun.(index), :write) do
+    case CommonFile.open(naming_fun.(index), :write) do
       {:ok, fd} -> {:ok, %{state | fd: fd}}
       error -> Error.wrap(error, :open, state)
     end
   end
 
   defp close(%{fd: fd, index: index} = state) do
-    case mockable(CommonFile).close(fd) do
+    case CommonFile.close(fd) do
       :ok -> {:ok, %{state | fd: nil, index: index + 1}}
       error -> Error.wrap(error, :close, state)
     end

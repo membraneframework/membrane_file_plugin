@@ -37,7 +37,7 @@ defmodule Membrane.File.Plugin.Mixfile do
   defp deps do
     [
       {:membrane_core, "~> 0.8.0"},
-      {:mockery, "~> 2.3", runtime: false},
+      {:patch, "~> 0.12.0", only: [:test], runtime: false},
       {:ex_doc, "~> 0.26", only: :dev, runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]

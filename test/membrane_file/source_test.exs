@@ -1,52 +1,65 @@
 defmodule Membrane.File.SourceTest do
-  use ExUnit.Case
-  use Mockery
-  use Membrane.File.TestSupport.Common, module: Membrane.File.Source
-
-  alias Membrane.File.CommonFile
-  alias Membrane.Buffer
-
-  @module Membrane.File.Source
+  use Membrane.File.TestSupport.Boilerplate, for: Membrane.File.Source
 
   defp state(_ctx) do
     %{state: %{location: "", chunk_size: nil, fd: nil}}
   end
 
-  setup_all :state
+  setup_all [:state, :inject_mock_fd]
 
   describe "handle_demand buffers" do
-    setup :inject_mock_fd
+    setup %{state: state} do
+      %{state: %{state | chunk_size: 5}}
+    end
 
     test "should send chunk of size state.chunk_size", %{state: state} do
-      state = %{state | chunk_size: 5}
-      mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2, 3, 4, 5>> end)
+      %{fd: file, chunk_size: chunk_size} = state
+      chunk = <<1::size(chunk_size)-unit(8)>>
 
-      assert {{:ok, buffer: {:output, %Buffer{payload: <<1, 2, 3, 4, 5>>}}, redemand: :output},
-              ^state} = @module.handle_demand(:output, nil, :buffers, nil, state)
+      patch(CommonFile, :binread, chunk)
+
+      assert {{:ok, buffer: {:output, %Buffer{payload: ^chunk}}, redemand: :output}, ^state} =
+               @module.handle_demand(:output, nil, :buffers, nil, state)
+
+      assert_called_once(CommonFile.binread(^file, ^chunk_size))
     end
 
     test "should send eos event on eof", %{state: state} do
-      state = %{state | chunk_size: 5}
-      mock(CommonFile, [binread: 2], :eof)
+      %{fd: file, chunk_size: chunk_size} = state
+
+      patch(CommonFile, :binread, :eof)
 
       assert {{:ok, end_of_stream: :output}, state} ==
                @module.handle_demand(:output, nil, :buffers, nil, state)
+
+      assert_called_once(CommonFile.binread(^file, ^chunk_size))
     end
   end
 
   describe "handle_demand bytes" do
     test "should send chunk of given size when demand in bytes", %{state: state} do
-      mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2, 3, 4, 5>> end)
+      %{fd: file} = state
+      chunk_size = 10
+      chunk = <<1::size(chunk_size)-unit(8)>>
 
-      assert {{:ok, buffer: {:output, %Buffer{payload: <<1, 2, 3, 4, 5>>}}}, ^state} =
-               @module.handle_demand(:output, 5, :bytes, nil, state)
+      patch(CommonFile, :binread, chunk)
+
+      assert {{:ok, buffer: {:output, %Buffer{payload: ^chunk}}}, ^state} =
+               @module.handle_demand(:output, chunk_size, :bytes, nil, state)
+
+      assert_called_once(CommonFile.binread(^file, ^chunk_size))
     end
 
     test "should send eos event on eof", %{state: state} do
-      mock(CommonFile, [binread: 2], :eof)
+      %{fd: file} = state
+      chunk_size = 10
+
+      patch(CommonFile, :binread, :eof)
 
       assert {{:ok, end_of_stream: :output}, state} ==
-               @module.handle_demand(:output, 5, :bytes, nil, state)
+               @module.handle_demand(:output, chunk_size, :bytes, nil, state)
+
+      assert_called_once(CommonFile.binread(^file, ^chunk_size))
     end
   end
 end

@@ -1,19 +1,29 @@
-defmodule Membrane.File.TestSupport.Common do
+defmodule Membrane.File.TestSupport.Boilerplate do
   @moduledoc false
 
-  defmacro __using__(module: module) do
+  defmacro __using__(for: module) do
     quote do
+      use ExUnit.Case
+      use Patch
+
+      alias Membrane.Buffer
       alias Membrane.File.CommonFile
       alias Membrane.Element.CallbackContext.{Prepare, Stop}
+
+      @module unquote(module)
+
+      defp inject_mock_fd(%{state: state}) do
+        %{state: %{state | fd: :file}}
+      end
 
       describe "common handle_stopped_to_prepared" do
         test "should open file", %{state: state} do
           %{location: location} = state
 
-          mock(CommonFile, [open: 2], fn ^location, _modes -> {:ok, :file} end)
+          patch(CommonFile, :open, fn ^location, _modes -> {:ok, :file} end)
 
-          # in case of opening with `:read` flag, truncating needs to be done explicitly
-          mock(CommonFile, [truncate: 1], :ok)
+          # as `File.Sink` uses also `:read` open mode, it needs to explicitly truncate the file if it already exists
+          patch(CommonFile, :truncate, fn :file -> :ok end)
 
           assert {:ok, %{fd: :file}} = unquote(module).handle_stopped_to_prepared(%{}, state)
         end
@@ -25,16 +35,12 @@ defmodule Membrane.File.TestSupport.Common do
         test "should close file", %{state: state} do
           %{fd: fd} = state
 
-          mock(CommonFile, [close: 1], :ok)
+          patch(CommonFile, :close, fn ^fd -> :ok end)
 
           assert {:ok, %{fd: nil}} = unquote(module).handle_prepared_to_stopped(%{}, state)
 
-          assert_called(CommonFile, :close, [^fd], 1)
+          assert_called_once(CommonFile.close(^fd))
         end
-      end
-
-      defp inject_mock_fd(%{state: state}) do
-        %{state: %{state | fd: :file}}
       end
     end
   end

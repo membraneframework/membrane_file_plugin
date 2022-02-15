@@ -4,7 +4,6 @@ defmodule Membrane.File.Source do
   through the output pad.
   """
   use Membrane.Source
-  import Mockery.Macro
 
   alias Membrane.Buffer
   alias Membrane.File.{CommonFile, Error}
@@ -33,7 +32,7 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
-    case mockable(CommonFile).open(location, :read) do
+    case CommonFile.open(location, :read) do
       {:ok, fd} -> {:ok, %{state | fd: fd}}
       error -> Error.wrap(error, :open, state)
     end
@@ -47,7 +46,7 @@ defmodule Membrane.File.Source do
     do: supply_demand(size, [], state)
 
   defp supply_demand(size, redemand, %{fd: fd} = state) do
-    case mockable(CommonFile).binread(fd, size) do
+    case CommonFile.binread(fd, size) do
       <<payload::binary>> ->
         {{:ok, [buffer: {:output, %Buffer{payload: payload}}] ++ redemand}, state}
 
@@ -61,7 +60,7 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-    case mockable(CommonFile).close(fd) do
+    case CommonFile.close(fd) do
       :ok -> {:ok, %{state | fd: nil}}
       error -> Error.wrap(error, :close, state)
     end
