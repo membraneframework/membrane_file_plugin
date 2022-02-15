@@ -2,7 +2,7 @@ defmodule Membrane.File.SeekEvent do
   @moduledoc """
   Event that triggers seeking or insertion to a file in `Membrane.File.Sink`.
 
-  `inspect(__MODULE__)` allows to control behaviour of `Membrane.File.Sink` when writing to a file
+  `#{inspect(__MODULE__)}` allows to control behaviour of `Membrane.File.Sink` when writing to a file
   by seeking to given `position` (relative to beginning of file, current position or end of file).
   All buffers that arrive after that event are being written starting from the `position`.
 
