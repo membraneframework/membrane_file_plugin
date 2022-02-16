@@ -38,8 +38,9 @@ defmodule Membrane.File.Plugin.Mixfile do
     [
       {:membrane_core, "~> 0.8.0"},
       {:mockery, "~> 2.3", runtime: false},
-      {:ex_doc, "~> 0.26", only: :dev, runtime: false},
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -58,6 +59,7 @@ defmodule Membrane.File.Plugin.Mixfile do
     [
       main: "readme",
       extras: ["README.md", "LICENSE"],
+      formatters: ["html"],
       source_ref: "v#{@version}",
       nest_modules_by_prefix: [Membrane.File]
     ]
