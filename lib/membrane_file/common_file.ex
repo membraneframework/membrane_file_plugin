@@ -4,13 +4,15 @@ defmodule Membrane.File.CommonFile do
   alias Membrane.{Buffer, Payload}
   alias Membrane.File.{Error, SeekEvent}
 
-  @spec open(Path.t(), [File.mode() | :ram]) :: {:ok, File.io_device()} | Error.posix_error_t()
+  @spec open(Path.t(), File.mode() | [File.mode() | :ram]) ::
+          {:ok, File.io_device()} | Error.posix_error_t()
   def open(path, modes), do: File.open(path, [:binary | List.wrap(modes)])
 
   @spec write(File.io_device(), Buffer.t()) :: :ok | Error.posix_error_t()
   def write(fd, %Buffer{payload: payload}), do: IO.binwrite(fd, Payload.to_binary(payload))
 
-  @spec seek(File.io_device(), SeekEvent.position_t()) :: :ok | Error.generic_error_t()
+  @spec seek(File.io_device(), SeekEvent.position_t()) ::
+          {:ok, integer()} | Error.generic_error_t()
   def seek(fd, position), do: :file.position(fd, position)
 
   @spec copy(File.io_device(), File.io_device()) ::
@@ -46,6 +48,6 @@ defmodule Membrane.File.CommonFile do
   @spec rm(Path.t()) :: :ok | Error.posix_error_t()
   defdelegate rm(path), to: File
 
-  @spec binread(File.io_device(), non_neg_integer()) :: IO.iodata() | IO.nodata()
+  @spec binread(File.io_device(), non_neg_integer()) :: iodata() | IO.nodata()
   defdelegate binread(fd, bytes_count), to: IO
 end
