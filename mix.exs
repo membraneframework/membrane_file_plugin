@@ -1,14 +1,14 @@
 defmodule Membrane.File.Plugin.Mixfile do
   use Mix.Project
 
-  @version "0.8.0"
+  @version "0.9.0"
   @github_url "https://github.com/membraneframework/membrane_file_plugin"
 
   def project do
     [
       app: :membrane_file_plugin,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -36,7 +36,7 @@ defmodule Membrane.File.Plugin.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.8.0"},
+      {:membrane_core, "~> 0.9.0"},
       {:mockery, "~> 2.3", runtime: false},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
