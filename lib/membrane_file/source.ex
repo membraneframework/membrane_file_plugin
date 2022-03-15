@@ -19,7 +19,7 @@ defmodule Membrane.File.Source do
                 description: "Size of chunks being read"
               ]
 
-  def_output_pad :output, caps: {RemoteStream, type: :packetized}
+  def_output_pad :output, caps: {RemoteStream, type: :bytestream}
 
   @impl true
   def handle_init(%__MODULE__{location: location, chunk_size: size}) do
@@ -41,7 +41,7 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
-    {{:ok, caps: {:output, %RemoteStream{type: :packetized}}}, state}
+    {{:ok, caps: {:output, %RemoteStream{type: :bytestream}}}, state}
   end
 
   @impl true
