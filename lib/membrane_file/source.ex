@@ -6,7 +6,7 @@ defmodule Membrane.File.Source do
   use Membrane.Source
   import Mockery.Macro
 
-  alias Membrane.Buffer
+  alias Membrane.{Buffer, RemoteStream}
   alias Membrane.File.{CommonFile, Error}
 
   def_options location: [
@@ -19,7 +19,7 @@ defmodule Membrane.File.Source do
                 description: "Size of chunks being read"
               ]
 
-  def_output_pad :output, caps: :any
+  def_output_pad :output, caps: {RemoteStream, type: :bytestream}
 
   @impl true
   def handle_init(%__MODULE__{location: location, chunk_size: size}) do
@@ -37,6 +37,11 @@ defmodule Membrane.File.Source do
       {:ok, fd} -> {:ok, %{state | fd: fd}}
       error -> Error.wrap(error, :open, state)
     end
+  end
+
+  @impl true
+  def handle_prepared_to_playing(_ctx, state) do
+    {{:ok, caps: {:output, %RemoteStream{type: :bytestream}}}, state}
   end
 
   @impl true
