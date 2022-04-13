@@ -7,7 +7,7 @@ defmodule Membrane.File.Source do
   import Mockery.Macro
 
   alias Membrane.{Buffer, RemoteStream}
-  alias Membrane.File.{CommonFile, Error}
+  alias Membrane.File.CommonFile
 
   def_options location: [
                 spec: Path.t(),
@@ -33,10 +33,8 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
-    case mockable(CommonFile).open(location, :read) do
-      {:ok, fd} -> {:ok, %{state | fd: fd}}
-      error -> Error.wrap(error, :open, state)
-    end
+    fd = mockable(CommonFile).open!(location, :read)
+    {:ok, %{state | fd: fd}}
   end
 
   @impl true
@@ -53,7 +51,7 @@ defmodule Membrane.File.Source do
 
   defp supply_demand(size, redemand, %{fd: fd} = state) do
     actions =
-      case mockable(CommonFile).binread(fd, size) do
+      case mockable(CommonFile).binread!(fd, size) do
         <<payload::binary>> when byte_size(payload) == size ->
           [buffer: {:output, %Buffer{payload: payload}}] ++ redemand
 
@@ -62,9 +60,6 @@ defmodule Membrane.File.Source do
 
         :eof ->
           [end_of_stream: :output]
-
-        error ->
-          Error.wrap(error, :read_file, state)
       end
 
     {{:ok, actions}, state}
@@ -72,9 +67,7 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-    case mockable(CommonFile).close(fd) do
-      :ok -> {:ok, %{state | fd: nil}}
-      error -> Error.wrap(error, :close, state)
-    end
+    :ok = mockable(CommonFile).close!(fd)
+    {:ok, %{state | fd: nil}}
   end
 end

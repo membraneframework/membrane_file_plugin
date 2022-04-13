@@ -10,10 +10,10 @@ defmodule Membrane.File.TestSupport.Common do
         test "should open file", %{state: state} do
           %{location: location} = state
 
-          mock(CommonFile, [open: 2], fn ^location, _modes -> {:ok, :file} end)
+          mock(CommonFile, [open!: 2], fn ^location, _modes -> :file end)
 
           # in case of opening with `:read` flag, truncating needs to be done explicitly
-          mock(CommonFile, [truncate: 1], :ok)
+          mock(CommonFile, [truncate!: 1], :ok)
 
           assert {:ok, %{fd: :file}} = unquote(module).handle_stopped_to_prepared(%{}, state)
         end
@@ -25,11 +25,11 @@ defmodule Membrane.File.TestSupport.Common do
         test "should close file", %{state: state} do
           %{fd: fd} = state
 
-          mock(CommonFile, [close: 1], :ok)
+          mock(CommonFile, [close!: 1], :ok)
 
           assert {:ok, %{fd: nil}} = unquote(module).handle_prepared_to_stopped(%{}, state)
 
-          assert_called(CommonFile, :close, [^fd], 1)
+          assert_called(CommonFile, :close!, [^fd], 1)
         end
       end
 
