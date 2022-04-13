@@ -4,10 +4,10 @@ defmodule Membrane.File.Source do
   through the output pad.
   """
   use Membrane.Source
-  import Mockery.Macro
 
   alias Membrane.{Buffer, RemoteStream}
-  alias Membrane.File.CommonFile
+
+  @common_file Application.compile_env(:membrane_file_plugin, :file_impl)
 
   def_options location: [
                 spec: Path.t(),
@@ -33,7 +33,7 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
-    fd = mockable(CommonFile).open!(location, :read)
+    fd = @common_file.open!(location, :read)
     {:ok, %{state | fd: fd}}
   end
 
@@ -51,7 +51,7 @@ defmodule Membrane.File.Source do
 
   defp supply_demand(size, redemand, %{fd: fd} = state) do
     actions =
-      case mockable(CommonFile).binread!(fd, size) do
+      case @common_file.binread!(fd, size) do
         <<payload::binary>> when byte_size(payload) == size ->
           [buffer: {:output, %Buffer{payload: payload}}] ++ redemand
 
@@ -67,7 +67,7 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-    :ok = mockable(CommonFile).close!(fd)
+    :ok = @common_file.close!(fd)
     {:ok, %{state | fd: nil}}
   end
 end

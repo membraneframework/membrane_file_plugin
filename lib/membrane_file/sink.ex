@@ -9,9 +9,10 @@ defmodule Membrane.File.Sink do
   For more information refer to `Membrane.File.SeekEvent` moduledoc.
   """
   use Membrane.Sink
-  import Mockery.Macro
 
-  alias Membrane.File.{CommonFile, SeekEvent}
+  alias Membrane.File.SeekEvent
+
+  @common_file Application.compile_env(:membrane_file_plugin, :file_impl)
 
   def_options location: [
                 spec: Path.t(),
@@ -33,8 +34,8 @@ defmodule Membrane.File.Sink do
 
   @impl true
   def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
-    fd = mockable(CommonFile).open!(location, [:read, :write])
-    :ok = mockable(CommonFile).truncate!(fd)
+    fd = @common_file.open!(location, [:read, :write])
+    :ok = @common_file.truncate!(fd)
     {:ok, %{state | fd: fd}}
   end
 
@@ -45,7 +46,7 @@ defmodule Membrane.File.Sink do
 
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
-    :ok = mockable(CommonFile).write!(fd, buffer)
+    :ok = @common_file.write!(fd, buffer)
     {{:ok, demand: :input}, state}
   end
 
@@ -66,13 +67,13 @@ defmodule Membrane.File.Sink do
   @impl true
   def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
     state = maybe_merge_temporary(state)
-    :ok = mockable(CommonFile).close!(fd)
+    :ok = @common_file.close!(fd)
     {:ok, %{state | fd: nil}}
   end
 
   defp seek_file(%{fd: fd} = state, position) do
     state = maybe_merge_temporary(state)
-    _position = mockable(CommonFile).seek!(fd, position)
+    _position = @common_file.seek!(fd, position)
     state
   end
 
@@ -82,7 +83,7 @@ defmodule Membrane.File.Sink do
       |> seek_file(position)
       |> open_temporary()
 
-    :ok = mockable(CommonFile).split!(fd, state.temp_fd)
+    :ok = @common_file.split!(fd, state.temp_fd)
     state
   end
 
@@ -91,18 +92,18 @@ defmodule Membrane.File.Sink do
   defp maybe_merge_temporary(%{fd: fd, temp_fd: temp_fd} = state) do
     # TODO: Consider improving performance for multi-insertion scenarios by using
     # multiple temporary files and merging them only once on `handle_prepared_to_stopped/2`.
-    _bytes_copied = mockable(CommonFile).copy!(temp_fd, fd)
+    _bytes_copied = @common_file.copy!(temp_fd, fd)
     remove_temporary(state)
   end
 
   defp open_temporary(%{temp_fd: nil, temp_location: temp_location} = state) do
-    temp_fd = mockable(CommonFile).open!(temp_location, [:read, :exclusive])
+    temp_fd = @common_file.open!(temp_location, [:read, :exclusive])
     %{state | temp_fd: temp_fd}
   end
 
   defp remove_temporary(%{temp_fd: temp_fd, temp_location: temp_location} = state) do
-    :ok = mockable(CommonFile).close!(temp_fd)
-    :ok = mockable(CommonFile).rm!(temp_location)
+    :ok = @common_file.close!(temp_fd)
+    :ok = @common_file.rm!(temp_location)
     %{state | temp_fd: nil}
   end
 end

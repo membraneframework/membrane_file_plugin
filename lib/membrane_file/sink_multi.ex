@@ -11,9 +11,7 @@ defmodule Membrane.File.Sink.Multi do
   """
   use Membrane.Sink
 
-  import Mockery.Macro
-
-  alias Membrane.File.CommonFile
+  @common_file Application.compile_env(:membrane_file_plugin, :file_impl)
 
   def_options location: [
                 spec: Path.t(),
@@ -80,7 +78,7 @@ defmodule Membrane.File.Sink.Multi do
 
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
-    :ok = mockable(CommonFile).write!(fd, buffer)
+    :ok = @common_file.write!(fd, buffer)
     {{:ok, demand: :input}, state}
   end
 
@@ -88,12 +86,12 @@ defmodule Membrane.File.Sink.Multi do
   def handle_prepared_to_stopped(_ctx, state), do: {:ok, close(state)}
 
   defp open(%{naming_fun: naming_fun, index: index} = state) do
-    fd = mockable(CommonFile).open!(naming_fun.(index), :write)
+    fd = @common_file.open!(naming_fun.(index), :write)
     %{state | fd: fd}
   end
 
   defp close(%{fd: fd, index: index} = state) do
-    :ok = mockable(CommonFile).close!(fd)
+    :ok = @common_file.close!(fd)
 
     %{state | fd: nil, index: index + 1}
   end
