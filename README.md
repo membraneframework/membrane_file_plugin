@@ -15,7 +15,7 @@ The package can be installed by adding `membrane_file_plugin` to your list of de
 ```elixir
 def deps do
   [
-    {:membrane_file_plugin, "~> 0.10.0"}
+    {:membrane_file_plugin, "~> 0.11.0"}
   ]
 end
 ```
