@@ -21,16 +21,28 @@ defmodule Membrane.File.SourceTest do
       state = %{state | chunk_size: 5}
       mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2, 3, 4, 5>> end)
 
-      assert {{:ok, buffer: {:output, %Buffer{payload: <<1, 2, 3, 4, 5>>}}, redemand: :output},
-              ^state} = @module.handle_demand(:output, nil, :buffers, nil, state)
+      assert {{:ok, actions}, ^state} = @module.handle_demand(:output, 1, :buffers, nil, state)
+
+      assert actions == [
+               buffer: {:output, %Buffer{payload: <<1, 2, 3, 4, 5>>}},
+               redemand: :output
+             ]
+    end
+
+    test "should send chunk and eos event when reads until eof", %{state: state} do
+      state = %{state | chunk_size: 5}
+      mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2>> end)
+
+      assert {{:ok, actions}, ^state} = @module.handle_demand(:output, 1, :buffers, nil, state)
+      assert actions == [buffer: {:output, %Buffer{payload: <<1, 2>>}}, end_of_stream: :output]
     end
 
     test "should send eos event on eof", %{state: state} do
       state = %{state | chunk_size: 5}
       mock(CommonFile, [binread: 2], :eof)
 
-      assert {{:ok, end_of_stream: :output}, state} ==
-               @module.handle_demand(:output, nil, :buffers, nil, state)
+      assert @module.handle_demand(:output, 1, :buffers, nil, state) ==
+               {{:ok, end_of_stream: :output}, state}
     end
   end
 
@@ -38,12 +50,19 @@ defmodule Membrane.File.SourceTest do
     test "should send chunk of given size when demand in bytes", %{state: state} do
       mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2, 3, 4, 5>> end)
 
-      assert {{:ok, buffer: {:output, %Buffer{payload: <<1, 2, 3, 4, 5>>}}}, ^state} =
-               @module.handle_demand(:output, 5, :bytes, nil, state)
+      assert @module.handle_demand(:output, 5, :bytes, nil, state) ==
+               {{:ok, buffer: {:output, %Buffer{payload: <<1, 2, 3, 4, 5>>}}}, state}
+    end
+
+    test "should send chunk and eos event when reads until eof", %{state: state} do
+      mock(CommonFile, [binread: 2], fn _file, 5 -> <<1, 2>> end)
+
+      assert {{:ok, actions}, ^state} = @module.handle_demand(:output, 5, :bytes, nil, state)
+      assert actions == [buffer: {:output, %Buffer{payload: <<1, 2>>}}, end_of_stream: :output]
     end
 
     test "should send eos event on eof", %{state: state} do
-      mock(CommonFile, [binread: 2], :eof)
+      mock(CommonFile, [binread: 2], fn _file, 5 -> :eof end)
 
       assert {{:ok, end_of_stream: :output}, state} ==
                @module.handle_demand(:output, 5, :bytes, nil, state)

@@ -52,16 +52,22 @@ defmodule Membrane.File.Source do
     do: supply_demand(size, [], state)
 
   defp supply_demand(size, redemand, %{fd: fd} = state) do
-    case mockable(CommonFile).binread(fd, size) do
-      <<payload::binary>> ->
-        {{:ok, [buffer: {:output, %Buffer{payload: payload}}] ++ redemand}, state}
+    actions =
+      case mockable(CommonFile).binread(fd, size) do
+        <<payload::binary>> when byte_size(payload) == size ->
+          [buffer: {:output, %Buffer{payload: payload}}] ++ redemand
 
-      :eof ->
-        {{:ok, end_of_stream: :output}, state}
+        <<payload::binary>> when byte_size(payload) < size ->
+          [buffer: {:output, %Buffer{payload: payload}}, end_of_stream: :output]
 
-      error ->
-        Error.wrap(error, :read_file, state)
-    end
+        :eof ->
+          [end_of_stream: :output]
+
+        error ->
+          Error.wrap(error, :read_file, state)
+      end
+
+    {{:ok, actions}, state}
   end
 
   @impl true
