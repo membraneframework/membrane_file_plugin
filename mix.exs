@@ -12,6 +12,7 @@ defmodule Membrane.File.Plugin.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      dialyzer: dialyzer(),
 
       # hex
       description: "Plugin for reading and writing to files for Membrane Multimedia Framework",
@@ -37,11 +38,29 @@ defmodule Membrane.File.Plugin.Mixfile do
   defp deps do
     [
       {:membrane_core, "~> 0.9.0"},
-      {:mockery, "~> 2.3", runtime: false},
+      # Testing
+      {:mox, "~> 1.0", only: :test},
+      # Development
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.6", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.1", only: :dev, runtime: false}
     ]
+  end
+
+  defp dialyzer() do
+    opts = [
+      plt_local_path: "priv/plts",
+      flags: [:error_handling]
+    ]
+
+    if System.get_env("CI") == "true" do
+      # Store core PLTs in cacheable directory for CI
+      # For development it's better to stick to default, $MIX_HOME based path
+      # to allow sharing core PLTs between projects
+      [plt_core_path: "priv/plts"] ++ opts
+    else
+      opts
+    end
   end
 
   defp package do

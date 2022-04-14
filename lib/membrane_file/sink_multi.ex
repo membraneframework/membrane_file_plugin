@@ -10,9 +10,8 @@ defmodule Membrane.File.Sink.Multi do
   It defaults to `Membrane.File.SplitEvent`.
   """
   use Membrane.Sink
-  import Mockery.Macro
 
-  alias Membrane.File.{CommonFile, Error}
+  @common_file Application.compile_env(:membrane_file_plugin, :file_impl)
 
   def_options location: [
                 spec: Path.t(),
@@ -58,7 +57,7 @@ defmodule Membrane.File.Sink.Multi do
   end
 
   @impl true
-  def handle_stopped_to_prepared(_ctx, state), do: open(state)
+  def handle_stopped_to_prepared(_ctx, state), do: {:ok, open(state)}
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
@@ -67,38 +66,33 @@ defmodule Membrane.File.Sink.Multi do
 
   @impl true
   def handle_event(:input, %split_on{}, _ctx, %{split_on: split_on} = state) do
-    with {:ok, state} <- close(state),
-         {:ok, state} <- open(state) do
-      {:ok, state}
-    else
-      error -> Error.wrap(error, :split, state)
-    end
+    state =
+      state
+      |> close()
+      |> open()
+
+    {:ok, state}
   end
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
-    case mockable(CommonFile).write(fd, buffer) do
-      :ok -> {{:ok, demand: :input}, state}
-      error -> Error.wrap(error, :write, state)
-    end
+    :ok = @common_file.write!(fd, buffer)
+    {{:ok, demand: :input}, state}
   end
 
   @impl true
-  def handle_prepared_to_stopped(_ctx, state), do: close(state)
+  def handle_prepared_to_stopped(_ctx, state), do: {:ok, close(state)}
 
   defp open(%{naming_fun: naming_fun, index: index} = state) do
-    case mockable(CommonFile).open(naming_fun.(index), :write) do
-      {:ok, fd} -> {:ok, %{state | fd: fd}}
-      error -> Error.wrap(error, :open, state)
-    end
+    fd = @common_file.open!(naming_fun.(index), :write)
+    %{state | fd: fd}
   end
 
   defp close(%{fd: fd, index: index} = state) do
-    case mockable(CommonFile).close(fd) do
-      :ok -> {:ok, %{state | fd: nil, index: index + 1}}
-      error -> Error.wrap(error, :close, state)
-    end
+    :ok = @common_file.close!(fd)
+
+    %{state | fd: nil, index: index + 1}
   end
 end

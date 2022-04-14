@@ -1,35 +1,41 @@
-defmodule Membrane.File.TestSupport.Common do
+defmodule Membrane.File.TestCaseTemplate do
   @moduledoc false
+  use ExUnit.CaseTemplate
 
-  defmacro __using__(module: module) do
+  using opts do
+    module = opts[:module]
+
     quote do
-      alias Membrane.File.CommonFile
+      import Mox
+
+      alias Membrane.File.CommonMock
       alias Membrane.Element.CallbackContext.{Prepare, Stop}
 
-      describe "common handle_stopped_to_prepared" do
+      setup :verify_on_exit!
+
+      describe "template: handle_stopped_to_prepared" do
         test "should open file", %{state: state} do
           %{location: location} = state
 
-          mock(CommonFile, [open: 2], fn ^location, _modes -> {:ok, :file} end)
-
+          CommonMock
+          |> expect(:open!, fn ^location, _modes -> :file end)
           # in case of opening with `:read` flag, truncating needs to be done explicitly
-          mock(CommonFile, [truncate: 1], :ok)
+          |> stub(:truncate!, fn _fd -> :ok end)
 
           assert {:ok, %{fd: :file}} = unquote(module).handle_stopped_to_prepared(%{}, state)
         end
       end
 
-      describe "common handle_prepared_to_stopped" do
+      describe "template: handle_prepared_to_stopped" do
         setup :inject_mock_fd
 
         test "should close file", %{state: state} do
           %{fd: fd} = state
 
-          mock(CommonFile, [close: 1], :ok)
+          CommonMock
+          |> expect(:close!, fn _fd -> :ok end)
 
           assert {:ok, %{fd: nil}} = unquote(module).handle_prepared_to_stopped(%{}, state)
-
-          assert_called(CommonFile, :close, [^fd], 1)
         end
       end
 

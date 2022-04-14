@@ -9,9 +9,10 @@ defmodule Membrane.File.Sink do
   For more information refer to `Membrane.File.SeekEvent` moduledoc.
   """
   use Membrane.Sink
-  import Mockery.Macro
 
-  alias Membrane.File.{CommonFile, Error, SeekEvent}
+  alias Membrane.File.SeekEvent
+
+  @common_file Application.compile_env(:membrane_file_plugin, :file_impl)
 
   def_options location: [
                 spec: Path.t(),
@@ -33,12 +34,9 @@ defmodule Membrane.File.Sink do
 
   @impl true
   def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
-    with {:ok, fd} <- mockable(CommonFile).open(location, [:read, :write]),
-         :ok <- mockable(CommonFile).truncate(fd) do
-      {:ok, %{state | fd: fd}}
-    else
-      error -> Error.wrap(error, :open, state)
-    end
+    fd = @common_file.open!(location, [:read, :write])
+    :ok = @common_file.truncate!(fd)
+    {:ok, %{state | fd: fd}}
   end
 
   @impl true
@@ -48,78 +46,64 @@ defmodule Membrane.File.Sink do
 
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
-    case mockable(CommonFile).write(fd, buffer) do
-      :ok -> {{:ok, demand: :input}, state}
-      error -> Error.wrap(error, :write, state)
-    end
+    :ok = @common_file.write!(fd, buffer)
+    {{:ok, demand: :input}, state}
   end
 
   @impl true
   def handle_event(:input, %SeekEvent{insert?: insert?, position: position}, _ctx, state) do
-    if insert? do
-      split_file(position, state)
-    else
-      seek_file(position, state)
-    end
+    state =
+      if insert? do
+        split_file(state, position)
+      else
+        seek_file(state, position)
+      end
+
+    {:ok, state}
   end
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
   def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-    with {:ok, state} <- maybe_merge_temporary(state),
-         :ok <- mockable(CommonFile).close(fd) do
-      {:ok, %{state | fd: nil}}
-    else
-      error -> Error.wrap(error, :close, state)
-    end
+    state = maybe_merge_temporary(state)
+    :ok = @common_file.close!(fd)
+    {:ok, %{state | fd: nil}}
   end
 
-  defp seek_file(position, %{fd: fd} = state) do
-    with {:ok, state} <- maybe_merge_temporary(state),
-         {:ok, _position} <- mockable(CommonFile).seek(fd, position) do
-      {:ok, state}
-    else
-      error -> Error.wrap(error, :seek_file, state)
-    end
+  defp seek_file(%{fd: fd} = state, position) do
+    state = maybe_merge_temporary(state)
+    _position = @common_file.seek!(fd, position)
+    state
   end
 
-  defp split_file(position, %{fd: fd} = state) do
-    with {:ok, state} <- seek_file(position, state),
-         {:ok, state} <- open_temporary(state),
-         :ok <- mockable(CommonFile).split(fd, state.temp_fd) do
-      {:ok, state}
-    else
-      error -> Error.wrap(error, :split_file, state)
-    end
+  defp split_file(%{fd: fd} = state, position) do
+    state =
+      state
+      |> seek_file(position)
+      |> open_temporary()
+
+    :ok = @common_file.split!(fd, state.temp_fd)
+    state
   end
 
-  defp maybe_merge_temporary(%{temp_fd: nil} = state), do: {:ok, state}
+  defp maybe_merge_temporary(%{temp_fd: nil} = state), do: state
 
   defp maybe_merge_temporary(%{fd: fd, temp_fd: temp_fd} = state) do
     # TODO: Consider improving performance for multi-insertion scenarios by using
     # multiple temporary files and merging them only once on `handle_prepared_to_stopped/2`.
-    with {:ok, _bytes_copied} <- mockable(CommonFile).copy(temp_fd, fd),
-         {:ok, state} <- remove_temporary(state) do
-      {:ok, state}
-    else
-      error -> Error.wrap(error, :merge_temporary, state)
-    end
+    _bytes_copied = @common_file.copy!(temp_fd, fd)
+    remove_temporary(state)
   end
 
   defp open_temporary(%{temp_fd: nil, temp_location: temp_location} = state) do
-    case mockable(CommonFile).open(temp_location, [:read, :exclusive]) do
-      {:ok, temp_fd} -> {:ok, %{state | temp_fd: temp_fd}}
-      error -> Error.wrap(error, :open_temporary, state)
-    end
+    temp_fd = @common_file.open!(temp_location, [:read, :exclusive])
+    %{state | temp_fd: temp_fd}
   end
 
   defp remove_temporary(%{temp_fd: temp_fd, temp_location: temp_location} = state) do
-    with :ok <- mockable(CommonFile).close(temp_fd),
-         :ok <- mockable(CommonFile).rm(temp_location) do
-      {:ok, %{state | temp_fd: nil}}
-    else
-      error -> Error.wrap(error, :remove_temporary, state)
-    end
+    :ok = @common_file.close!(temp_fd)
+    :ok = @common_file.rm!(temp_location)
+    %{state | temp_fd: nil}
   end
 end
