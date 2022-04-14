@@ -49,7 +49,6 @@ defmodule Membrane.File.Plugin.Mixfile do
 
   defp dialyzer() do
     opts = [
-      plt_local_path: "priv/plts",
       flags: [:error_handling]
     ]
 
@@ -57,7 +56,8 @@ defmodule Membrane.File.Plugin.Mixfile do
       # Store core PLTs in cacheable directory for CI
       # For development it's better to stick to default, $MIX_HOME based path
       # to allow sharing core PLTs between projects
-      [plt_core_path: "priv/plts"] ++ opts
+      File.mkdir_p!(Path.join([__DIR__, "priv", "plts"]))
+      [plt_local_path: "priv/plts", plt_core_path: "priv/plts"] ++ opts
     else
       opts
     end
