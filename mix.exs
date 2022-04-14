@@ -67,6 +67,7 @@ defmodule Membrane.File.Plugin.Mixfile do
     [
       maintainers: ["Membrane Team"],
       licenses: ["Apache-2.0"],
+      files: ["lib", ".formatter.exs", "mix.exs", "README*", "LICENSE*"],
       links: %{
         "GitHub" => @github_url,
         "Membrane Framework Homepage" => "https://membraneframework.org"
