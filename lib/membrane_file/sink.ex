@@ -12,7 +12,7 @@ defmodule Membrane.File.Sink do
 
   alias Membrane.File.SeekEvent
 
-  @common_file Application.compile_env(:membrane_file_plugin, :file_impl)
+  @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
   def_options location: [
                 spec: Path.t(),

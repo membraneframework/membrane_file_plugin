@@ -4,6 +4,15 @@ defmodule Membrane.File.CommonFileBehaviour do
   alias Membrane.Buffer
   alias Membrane.File.SeekEvent
 
+  @common_file_impl Application.compile_env(
+                      :membrane_file_plugin,
+                      :file_impl,
+                      Membrane.File.CommonFile
+                    )
+
+  @spec get_impl() :: module()
+  def get_impl(), do: @common_file_impl
+
   @type posix_error_t :: {:error, File.posix()}
   @type generic_error_t :: {:error, File.posix() | :badarg | :terminated}
 

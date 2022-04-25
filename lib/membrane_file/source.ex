@@ -7,7 +7,7 @@ defmodule Membrane.File.Source do
 
   alias Membrane.{Buffer, RemoteStream}
 
-  @common_file Application.compile_env(:membrane_file_plugin, :file_impl)
+  @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
   def_options location: [
                 spec: Path.t(),

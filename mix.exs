@@ -1,7 +1,7 @@
 defmodule Membrane.File.Plugin.Mixfile do
   use Mix.Project
 
-  @version "0.11.0"
+  @version "0.11.1"
   @github_url "https://github.com/membraneframework/membrane_file_plugin"
 
   def project do
@@ -49,15 +49,13 @@ defmodule Membrane.File.Plugin.Mixfile do
 
   defp dialyzer() do
     opts = [
-      plt_local_path: "priv/plts",
       flags: [:error_handling]
     ]
 
     if System.get_env("CI") == "true" do
-      # Store core PLTs in cacheable directory for CI
-      # For development it's better to stick to default, $MIX_HOME based path
-      # to allow sharing core PLTs between projects
-      [plt_core_path: "priv/plts"] ++ opts
+      # Store PLTs in a directory cacheable on CI
+      File.mkdir_p!(Path.join([__DIR__, "priv", "plts"]))
+      [plt_local_path: "priv/plts", plt_core_path: "priv/plts"] ++ opts
     else
       opts
     end
@@ -67,7 +65,6 @@ defmodule Membrane.File.Plugin.Mixfile do
     [
       maintainers: ["Membrane Team"],
       licenses: ["Apache-2.0"],
-      files: ["lib", ".formatter.exs", "mix.exs", "README*", "LICENSE*"],
       links: %{
         "GitHub" => @github_url,
         "Membrane Framework Homepage" => "https://membraneframework.org"
