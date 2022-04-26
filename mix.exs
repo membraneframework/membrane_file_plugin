@@ -1,7 +1,8 @@
 defmodule Membrane.File.Plugin.Mixfile do
   use Mix.Project
 
-  @version "0.11.1"
+  @version "0.12.0"
+
   @github_url "https://github.com/membraneframework/membrane_file_plugin"
 
   def project do
@@ -37,7 +38,7 @@ defmodule Membrane.File.Plugin.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.9.0"},
+      {:membrane_core, "~> 0.10.0"},
       # Testing
       {:mox, "~> 1.0", only: :test},
       # Development
