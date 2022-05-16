@@ -1,4 +1,7 @@
-Mix.install([{:membrane_core, "~> 0.10.0"}, {:membrane_file_plugin, path: "."}])
+Mix.install([
+  {:membrane_core, "~> 0.10.0"},
+  {:membrane_file_plugin, path: Path.expand(__DIR__ <> "/..")}
+])
 
 defmodule FileExamplePipeline do
   use Membrane.Pipeline
@@ -6,10 +9,12 @@ defmodule FileExamplePipeline do
   @doc false
   @impl true
   def handle_init(target) do
-    children = [
-      file_src: %Membrane.File.Source{location: __ENV__.file},
-      file_sink: %Membrane.File.Sink{location: "/tmp/test"}
-    ] |> ParentSpec.link_linear()
+    links =
+      [
+        file_src: %Membrane.File.Source{location: __ENV__.file},
+        file_sink: %Membrane.File.Sink{location: "/tmp/test"}
+      ]
+      |> ParentSpec.link_linear()
 
     {{:ok, spec: %ParentSpec{links: links}, playback: :playing}, %{target: target}}
   end

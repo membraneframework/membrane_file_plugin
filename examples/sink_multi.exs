@@ -1,6 +1,6 @@
 Mix.install([
   {:membrane_core, "~> 0.10.0"},
-  {:membrane_file_plugin, path: "."}
+  {:membrane_file_plugin, path: Path.expand(__DIR__ <> "/..")}
 ])
 
 # Filter responsible for generating split events
