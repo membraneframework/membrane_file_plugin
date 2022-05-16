@@ -24,12 +24,12 @@ end
 
 ### File.Sink and File.Source
 
-`Source` and `Sink` elements allow to read from and write to a file, respectively.
-The pipeline in `./examples/sink_and_source.exs` will copy the contents of that script to `/tmp/example.exs` :
+`Source` and `Sink` elements allow reading from and writing to a file, respectively.
+The pipeline in `./examples/sink_and_source.exs` will copy the contents of that script to `/tmp/example.exs`
 
 ### File.MultiSink
 
-`MultiSink` allows to write output to multiple files, splitting the input into parts.
+`MultiSink` allows writing to multiple files, with the input being split into parts.
 The example in `./examples/sink_multi.exs` will generate 0-filled input file of 1024 bytes (`input.bin`)
 and copy first 10-bytes to `/tmp/output0.bin` and the rest to `/tmp/output1.bin`.
 
