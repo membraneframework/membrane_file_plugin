@@ -17,17 +17,23 @@ defmodule Membrane.File.Source do
                 spec: pos_integer(),
                 default: 2048,
                 description: "Size of chunks being read"
+              ],
+              caps: [
+                spec: any(),
+                default: %RemoteStream{type: :bytestream, content_format: nil},
+                description: "Caps which will be sent from Source"
               ]
 
-  def_output_pad :output, caps: {RemoteStream, type: :bytestream}
+  def_output_pad :output, caps: :any
 
   @impl true
-  def handle_init(%__MODULE__{location: location, chunk_size: size}) do
+  def handle_init(%__MODULE__{location: location, chunk_size: size, caps: caps}) do
     {:ok,
      %{
        location: Path.expand(location),
        chunk_size: size,
-       fd: nil
+       fd: nil,
+       caps: caps
      }}
   end
 
@@ -39,7 +45,7 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
-    {{:ok, caps: {:output, %RemoteStream{type: :bytestream}}}, state}
+    {{:ok, caps: {:output, state.caps}}, state}
   end
 
   @impl true

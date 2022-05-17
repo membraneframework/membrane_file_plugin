@@ -3,8 +3,8 @@ defmodule Membrane.File.SourceTest do
 
   import Mox
 
-  alias Membrane.File.CommonMock
   alias Membrane.Buffer
+  alias Membrane.File.CommonMock
 
   @module Membrane.File.Source
 

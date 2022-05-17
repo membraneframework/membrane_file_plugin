@@ -1,8 +1,8 @@
 defmodule Membrane.File.Sink.MultiTest do
   use Membrane.File.TestCaseTemplate, module: Membrane.File.Sink.Multi, async: true
 
-  alias Membrane.File.{CommonMock, SplitEvent}
   alias Membrane.Buffer
+  alias Membrane.File.{CommonMock, SplitEvent}
 
   @module Membrane.File.Sink.Multi
 

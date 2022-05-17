@@ -42,9 +42,9 @@ defmodule Membrane.File.Plugin.Mixfile do
       # Testing
       {:mox, "~> 1.0", only: :test},
       # Development
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:credo, "~> 1.6", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.1", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
@@ -54,8 +54,7 @@ defmodule Membrane.File.Plugin.Mixfile do
     ]
 
     if System.get_env("CI") == "true" do
-      # Store PLTs in a directory cacheable on CI
-      File.mkdir_p!(Path.join([__DIR__, "priv", "plts"]))
+      # Store PLTs in cacheable directory for CI
       [plt_local_path: "priv/plts", plt_core_path: "priv/plts"] ++ opts
     else
       opts
