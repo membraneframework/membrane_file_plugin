@@ -15,33 +15,23 @@ The package can be installed by adding `membrane_file_plugin` to your list of de
 ```elixir
 def deps do
   [
-	{:membrane_file_plugin, "~> 0.12.0"}
+    {membrane_file_plugin, "~> 0.12.0"}
   ]
 end
 ```
 
-## Sample usage
+## Usage examples
 
-Playing below pipeline should copy `/etc/passwd` to `./test`:
+### File.Sink and File.Source
 
-```elixir
-defmodule FileExamplePipeline do
-  use Membrane.Pipeline
+`Source` and `Sink` elements allow reading from and writing to a file, respectively.
+The pipeline in `./examples/sink_and_source.exs` will copy the contents of that script to `/tmp/example.exs`
 
-  @doc false
-  @impl true
-  def handle_init(_) do
-    children = [
-      file_src: %Membrane.File.Source{location: "/etc/passwd"},
-      file_sink: %Membrane.File.Sink{location: "./test"},
-    ]
-    links = [link(:file_src) |> to(:file_sink)]
+### File.MultiSink
 
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
-  end
-end
-
-```
+`MultiSink` allows writing to multiple files, with the input being split into parts.
+The example in `./examples/sink_multi.exs` will generate 0-filled input file of 1024 bytes (`input.bin`)
+and copy first 10-bytes to `/tmp/output0.bin` and the rest to `/tmp/output1.bin`.
 
 ## Copyright and License
 
