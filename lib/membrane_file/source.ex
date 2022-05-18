@@ -21,24 +21,19 @@ defmodule Membrane.File.Source do
               content_format: [
                 spec: module() | nil,
                 default: nil,
-                description: "Caps which will be sent from Source"
+                description: "Module for `RemoteStream.t()` caps sent by output pad"
               ]
 
   def_output_pad :output, caps: {RemoteStream, type: :bytestream}
 
   @impl true
-  def handle_init(%__MODULE__{
-        location: location,
-        chunk_size: size,
-        content_format: content_format
-      }) do
-    {:ok,
-     %{
-       location: Path.expand(location),
-       chunk_size: size,
-       fd: nil,
-       content_format: content_format
-     }}
+  def handle_init(options) do
+    state =
+      options
+      |> Map.from_struct()
+      |> Map.update(:location, &Path.expand/1)
+
+    {:ok, state}
   end
 
   @impl true
@@ -49,9 +44,9 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
-    {{:ok,
-      caps: {:output, %RemoteStream{type: :bytestream, content_format: state.content_format}}},
-     state}
+    output_format = %RemoteStream{type: :bytestream, content_format: state.content_format}
+
+    {{:ok, caps: {:output, output_format}}, state}
   end
 
   @impl true
