@@ -32,6 +32,7 @@ defmodule Membrane.File.Source do
       options
       |> Map.from_struct()
       |> Map.update!(:location, &Path.expand/1)
+      |> Map.put(:fd, nil)
 
     {:ok, state}
   end
