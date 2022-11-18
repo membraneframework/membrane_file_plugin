@@ -23,7 +23,6 @@ defmodule Membrane.File.TestCaseTemplate do
           |> stub(:truncate!, fn _fd -> :ok end)
 
           assert {[], %{fd: :file}} = unquote(module).handle_setup(ctx, state)
-
         end
       end
 

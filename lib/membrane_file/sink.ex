@@ -70,13 +70,6 @@ defmodule Membrane.File.Sink do
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
-  # @impl true
-  # def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-  #   state = maybe_merge_temporary(state)
-  #   :ok = @common_file.close!(fd)
-  #   {[], %{state | fd: nil}}
-  # end
-
   defp seek_file(%{fd: fd} = state, position) do
     state = maybe_merge_temporary(state)
     _position = @common_file.seek!(fd, position)

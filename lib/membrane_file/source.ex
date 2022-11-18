@@ -70,10 +70,4 @@ defmodule Membrane.File.Source do
 
     {actions, state}
   end
-
-  # @impl true
-  # def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-  #   :ok = @common_file.close!(fd)
-  #   {[], %{state | fd: nil}}
-  # end
 end
