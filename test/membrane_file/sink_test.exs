@@ -6,25 +6,30 @@ defmodule Membrane.File.SinkTest do
 
   @module Membrane.File.Sink
 
-  defp state(_ctx) do
-    %{state: %{location: "file", temp_location: "file.tmp", fd: nil, temp_fd: nil}}
+  defp state_and_ctx(_ctx) do
+    {:ok, resource_guard} = Membrane.ResourceGuard.start_link(self())
+
+    %{
+      ctx: %{resource_guard: resource_guard},
+      state: %{location: "file", temp_location: "file.tmp", fd: nil, temp_fd: nil}
+    }
   end
 
-  setup_all :state
+  setup :state_and_ctx
 
   setup :verify_on_exit!
 
   describe "on handle_write" do
     setup :inject_mock_fd
 
-    test "should write received chunk and request demand", %{state: state} do
+    test "should write received chunk and request demand", %{state: state, ctx: ctx} do
       %{fd: file} = state
       buffer = %Buffer{payload: <<1, 2, 3>>}
 
       CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
 
-      assert {{:ok, demand: :input}, state} ==
-               @module.handle_write(:input, buffer, nil, state)
+      assert {[demand: :input], state} ==
+               @module.handle_write(:input, buffer, ctx, state)
     end
   end
 
@@ -32,19 +37,21 @@ defmodule Membrane.File.SinkTest do
     setup :inject_mock_fd
 
     test "should change file descriptor position", %{
-      state: state
+      state: state,
+      ctx: ctx
     } do
       %{fd: file} = state
       position = {:bof, 32}
 
       CommonMock |> expect(:seek!, fn ^file, ^position -> 32 end)
 
-      assert {:ok, %{state | fd: file, temp_fd: nil}} ==
-               @module.handle_event(:input, %SeekEvent{position: position}, nil, state)
+      assert {[], %{state | fd: file, temp_fd: nil}} ==
+               @module.handle_event(:input, %SeekEvent{position: position}, ctx, state)
     end
 
     test "should change file descriptor position and split file if insertion is enabled", %{
-      state: state
+      state: state,
+      ctx: ctx
     } do
       %{fd: file, temp_location: temp_location} = state
       position = {:bof, 32}
@@ -54,28 +61,29 @@ defmodule Membrane.File.SinkTest do
       |> expect(:seek!, fn ^file, ^position -> 32 end)
       |> expect(:split!, fn ^file, :temporary -> :ok end)
 
-      assert {:ok, %{state | fd: file, temp_fd: :temporary}} ==
+      assert {[], %{state | fd: file, temp_fd: :temporary}} ==
                @module.handle_event(
                  :input,
                  %SeekEvent{position: position, insert?: true},
-                 nil,
+                 ctx,
                  state
                )
     end
 
-    test "should write to main file if temporary descriptor is opened", %{state: state} do
+    test "should write to main file if temporary descriptor is opened", %{state: state, ctx: ctx} do
       %{fd: file} = state
       state = %{state | temp_fd: :temporary}
       buffer = %Buffer{payload: <<1, 2, 3>>}
 
       CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
 
-      assert {{:ok, demand: :input}, %{state | fd: file, temp_fd: :temporary}} ==
-               @module.handle_write(:input, buffer, nil, state)
+      assert {[demand: :input], %{state | fd: file, temp_fd: :temporary}} ==
+               @module.handle_write(:input, buffer, ctx, state)
     end
 
     test "should merge, close and remove temporary file if temporary descriptor is opened", %{
-      state: state
+      state: state,
+      ctx: ctx
     } do
       %{fd: file, temp_location: temp_location} = state
       state = %{state | temp_fd: :temporary}
@@ -87,34 +95,34 @@ defmodule Membrane.File.SinkTest do
       |> expect(:rm!, fn ^temp_location -> :ok end)
       |> expect(:seek!, fn ^file, ^position -> 32 end)
 
-      assert {:ok, %{state | fd: file, temp_fd: nil}} ==
-               @module.handle_event(:input, %SeekEvent{position: position}, nil, state)
+      assert {[], %{state | fd: file, temp_fd: nil}} ==
+               @module.handle_event(:input, %SeekEvent{position: position}, ctx, state)
     end
   end
 
   describe "on handle_prepared_to_stopped" do
     setup :inject_mock_fd
 
-    test "should close file", %{state: state} do
-      %{fd: file} = state
+    # test "should close file", %{state: state} do
+    #   %{fd: file} = state
 
-      CommonMock |> expect(:close!, fn ^file -> :ok end)
+    #   CommonMock |> expect(:close!, fn ^file -> :ok end)
 
-      assert {:ok, %{state | fd: nil}} == @module.handle_prepared_to_stopped(nil, state)
-    end
+    #   assert {[], %{state | fd: nil}} == @module.handle_prepared_to_stopped(nil, state)
+    # end
 
-    test "should handle temporary file if temporary descriptor is opened", %{state: state} do
-      %{fd: file, temp_location: temp_location} = state
-      state = %{state | temp_fd: :temporary}
+    # test "should handle temporary file if temporary descriptor is opened", %{state: state} do
+    #   %{fd: file, temp_location: temp_location} = state
+    #   state = %{state | temp_fd: :temporary}
 
-      CommonMock
-      |> expect(:copy!, fn :temporary, ^file -> 0 end)
-      |> expect(:close!, fn :temporary -> :ok end)
-      |> expect(:rm!, fn ^temp_location -> :ok end)
-      |> expect(:close!, fn ^file -> :ok end)
+    #   CommonMock
+    #   |> expect(:copy!, fn :temporary, ^file -> 0 end)
+    #   |> expect(:close!, fn :temporary -> :ok end)
+    #   |> expect(:rm!, fn ^temp_location -> :ok end)
+    #   |> expect(:close!, fn ^file -> :ok end)
 
-      assert {:ok, %{state | fd: nil, temp_fd: nil}} ==
-               @module.handle_prepared_to_stopped(nil, state)
-    end
+    #   assert {[], %{state | fd: nil, temp_fd: nil}} ==
+    #            @module.handle_prepared_to_stopped(nil, state)
+    # end
   end
 end

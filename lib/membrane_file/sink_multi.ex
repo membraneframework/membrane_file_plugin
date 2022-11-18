@@ -43,11 +43,11 @@ defmodule Membrane.File.Sink.Multi do
   @spec default_naming_fun(Path.t(), non_neg_integer(), String.t()) :: Path.t()
   def default_naming_fun(path, i, ext), do: [path, i, ext] |> Enum.join() |> Path.expand()
 
-  def_input_pad :input, demand_unit: :buffers, caps: :any
+  def_input_pad :input, demand_unit: :buffers, accepted_format: _any
 
   @impl true
-  def handle_init(%__MODULE__{} = options) do
-    {:ok,
+  def handle_init(_ctx, %__MODULE__{} = options) do
+    {[],
      %{
        naming_fun: &options.naming_fun.(options.location, &1, options.extension),
        split_on: options.split_event,
@@ -57,21 +57,21 @@ defmodule Membrane.File.Sink.Multi do
   end
 
   @impl true
-  def handle_stopped_to_prepared(_ctx, state), do: {:ok, open(state)}
+  def handle_setup(ctx, state), do: {[], open(state, ctx)}
 
   @impl true
-  def handle_prepared_to_playing(_ctx, state) do
-    {{:ok, demand: :input}, state}
+  def handle_playing(_ctx, state) do
+    {[demand: :input], state}
   end
 
   @impl true
-  def handle_event(:input, %split_on{}, _ctx, %{split_on: split_on} = state) do
+  def handle_event(:input, %split_on{}, ctx, %{split_on: split_on} = state) do
     state =
       state
-      |> close()
-      |> open()
+      |> close(ctx)
+      |> open(ctx)
 
-    {:ok, state}
+    {[], state}
   end
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
@@ -79,19 +79,22 @@ defmodule Membrane.File.Sink.Multi do
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
     :ok = @common_file.write!(fd, buffer)
-    {{:ok, demand: :input}, state}
+    {[demand: :input], state}
   end
 
-  @impl true
-  def handle_prepared_to_stopped(_ctx, state), do: {:ok, close(state)}
+  # @impl true
+  # def handle_prepared_to_stopped(_ctx, state), do: {:ok, close(state)}
 
-  defp open(%{naming_fun: naming_fun, index: index} = state) do
+  defp open(%{naming_fun: naming_fun, index: index} = state, ctx) do
     fd = @common_file.open!(naming_fun.(index), :write)
+
+    Membrane.ResourceGuard.register(ctx.resource_guard, fn -> @common_file.close!(fd) end, tag: fd)
+
     %{state | fd: fd}
   end
 
-  defp close(%{fd: fd, index: index} = state) do
-    :ok = @common_file.close!(fd)
+  defp close(%{fd: fd, index: index} = state, ctx) do
+    Membrane.ResourceGuard.cleanup(ctx.resource_guard, fd)
 
     %{state | fd: nil, index: index + 1}
   end

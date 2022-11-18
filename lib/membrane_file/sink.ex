@@ -19,11 +19,11 @@ defmodule Membrane.File.Sink do
                 description: "Path of the output file"
               ]
 
-  def_input_pad :input, demand_unit: :buffers, caps: :any
+  def_input_pad :input, demand_unit: :buffers, accepted_format: _any
 
   @impl true
-  def handle_init(%__MODULE__{location: location}) do
-    {:ok,
+  def handle_init(_ctx, %__MODULE__{location: location}) do
+    {[],
      %{
        location: Path.expand(location),
        temp_location: Path.expand(location <> ".tmp"),
@@ -33,21 +33,27 @@ defmodule Membrane.File.Sink do
   end
 
   @impl true
-  def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
+  def handle_setup(ctx, %{location: location} = state) do
     fd = @common_file.open!(location, [:read, :write])
     :ok = @common_file.truncate!(fd)
-    {:ok, %{state | fd: fd}}
+
+    Membrane.ResourceGuard.register(
+      ctx.resource_guard,
+      fn -> @common_file.close!(fd) end
+    )
+
+    {[], %{state | fd: fd}}
   end
 
   @impl true
-  def handle_prepared_to_playing(_ctx, state) do
-    {{:ok, demand: :input}, state}
+  def handle_playing(_ctx, state) do
+    {[demand: :input], state}
   end
 
   @impl true
   def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
     :ok = @common_file.write!(fd, buffer)
-    {{:ok, demand: :input}, state}
+    {[demand: :input], state}
   end
 
   @impl true
@@ -59,17 +65,10 @@ defmodule Membrane.File.Sink do
         seek_file(state, position)
       end
 
-    {:ok, state}
+    {[], state}
   end
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
-
-  @impl true
-  def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-    state = maybe_merge_temporary(state)
-    :ok = @common_file.close!(fd)
-    {:ok, %{state | fd: nil}}
-  end
 
   defp seek_file(%{fd: fd} = state, position) do
     state = maybe_merge_temporary(state)

@@ -13,8 +13,8 @@ defmodule Membrane.File.TestCaseTemplate do
 
       setup :verify_on_exit!
 
-      describe "template: handle_stopped_to_prepared" do
-        test "should open file", %{state: state} do
+      describe "template: handle_setup" do
+        test "should open file", %{state: state, ctx: ctx} do
           %{location: location} = state
 
           CommonMock
@@ -22,25 +22,25 @@ defmodule Membrane.File.TestCaseTemplate do
           # in case of opening with `:read` flag, truncating needs to be done explicitly
           |> stub(:truncate!, fn _fd -> :ok end)
 
-          assert {:ok, %{fd: :file}} = unquote(module).handle_stopped_to_prepared(%{}, state)
+          assert {[], %{fd: :file}} = unquote(module).handle_setup(ctx, state)
         end
       end
 
-      describe "template: handle_prepared_to_stopped" do
-        setup :inject_mock_fd
+      # describe "template: handle_prepared_to_stopped" do
+      #   setup :inject_mock_fd
 
-        test "should close file", %{state: state} do
-          %{fd: fd} = state
+      #   test "should close file", %{state: state} do
+      #     %{fd: fd} = state
 
-          CommonMock
-          |> expect(:close!, fn _fd -> :ok end)
+      #     CommonMock
+      #     |> expect(:close!, fn _fd -> :ok end)
 
-          assert {:ok, %{fd: nil}} = unquote(module).handle_prepared_to_stopped(%{}, state)
-        end
-      end
+      #     assert {[], %{fd: nil}} = unquote(module).handle_prepared_to_stopped(%{}, state)
+      #   end
+      # end
 
-      defp inject_mock_fd(%{state: state}) do
-        %{state: %{state | fd: :file}}
+      defp inject_mock_fd(%{state: state, ctx: ctx}) do
+        %{state: %{state | fd: :file}, ctx: ctx}
       end
     end
   end

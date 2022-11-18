@@ -19,11 +19,11 @@ defmodule Membrane.File.Source do
                 description: "Size of chunks being read"
               ]
 
-  def_output_pad :output, caps: {RemoteStream, type: :bytestream}
+  def_output_pad :output, accepted_format: %RemoteStream{type: :bytestream}
 
   @impl true
-  def handle_init(%__MODULE__{location: location, chunk_size: size}) do
-    {:ok,
+  def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size}) do
+    {[],
      %{
        location: Path.expand(location),
        chunk_size: size,
@@ -32,14 +32,20 @@ defmodule Membrane.File.Source do
   end
 
   @impl true
-  def handle_stopped_to_prepared(_ctx, %{location: location} = state) do
+  def handle_setup(ctx, %{location: location} = state) do
     fd = @common_file.open!(location, :read)
-    {:ok, %{state | fd: fd}}
+
+    Membrane.ResourceGuard.register(
+      ctx.resource_guard,
+      fn -> @common_file.close!(fd) end
+    )
+
+    {[], %{state | fd: fd}}
   end
 
   @impl true
-  def handle_prepared_to_playing(_ctx, state) do
-    {{:ok, caps: {:output, %RemoteStream{type: :bytestream}}}, state}
+  def handle_playing(_ctx, state) do
+    {[stream_format: {:output, %RemoteStream{type: :bytestream}}], state}
   end
 
   @impl true
@@ -62,12 +68,6 @@ defmodule Membrane.File.Source do
           [end_of_stream: :output]
       end
 
-    {{:ok, actions}, state}
-  end
-
-  @impl true
-  def handle_prepared_to_stopped(_ctx, %{fd: fd} = state) do
-    :ok = @common_file.close!(fd)
-    {:ok, %{state | fd: nil}}
+    {actions, state}
   end
 end
