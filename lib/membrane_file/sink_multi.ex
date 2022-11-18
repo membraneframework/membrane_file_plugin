@@ -82,9 +82,6 @@ defmodule Membrane.File.Sink.Multi do
     {[demand: :input], state}
   end
 
-  # @impl true
-  # def handle_prepared_to_stopped(_ctx, state), do: {:ok, close(state)}
-
   defp open(%{naming_fun: naming_fun, index: index} = state, ctx) do
     fd = @common_file.open!(naming_fun.(index), :write)
 

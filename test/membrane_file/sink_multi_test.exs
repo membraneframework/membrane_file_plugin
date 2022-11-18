@@ -1,13 +1,15 @@
 defmodule Membrane.File.Sink.MultiTest do
   use Membrane.File.TestCaseTemplate, module: Membrane.File.Sink.Multi, async: true
 
+  import Membrane.Testing.Assertions
+
   alias Membrane.File.{CommonMock, SplitEvent}
   alias Membrane.Buffer
 
   @module Membrane.File.Sink.Multi
 
   defp state_and_ctx(_ctx) do
-    {:ok, resource_guard} = Membrane.ResourceGuard.start_link(self())
+    {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
 
     %{
       ctx: %{resource_guard: resource_guard},
@@ -46,19 +48,21 @@ defmodule Membrane.File.Sink.MultiTest do
       %{state: %{state | naming_fun: &Integer.to_string/1}, ctx: ctx}
     end
 
-    # test "should close current file and open new one if event type is state.split_on", %{
-    #   state: state,
-    #   ctx: ctx
-    # } do
-    #   %{fd: file} = state
+    test "should close current file and open new one if event type is state.split_on", %{
+      state: state,
+      ctx: ctx
+    } do
+      %{fd: file} = state
 
-    #   CommonMock
-    #   |> expect(:close!, fn ^file -> :ok end)
-    #   |> expect(:open!, fn "1", _modes -> :new_file end)
+      CommonMock
+      |> expect(:open!, fn "1", _modes -> :new_file end)
 
-    #   assert {[], %{state | index: 1, fd: :new_file}} ==
-    #            @module.handle_event(:input, %SplitEvent{}, ctx, state)
-    # end
+      assert {[], %{state | index: 1, fd: :new_file}} ==
+               @module.handle_event(:input, %SplitEvent{}, ctx, state)
+
+      assert_resource_guard_cleanup(ctx.resource_guard, ^file)
+      assert_resource_guard_register(ctx.resource_guard, _fun, :new_file)
+    end
 
     test "should not close current file and open new one if event type is not state.split_on", %{
       state: state,
@@ -70,11 +74,4 @@ defmodule Membrane.File.Sink.MultiTest do
                @module.handle_event(:input, :whatever, ctx, state)
     end
   end
-
-  # describe "handle_prepared_to_stopped" do
-  #   test "should increment file index", %{state: state} do
-  #     CommonMock |> expect(:close!, fn _fd -> :ok end)
-  #     assert {[], %{index: 1, fd: nil}} = @module.handle_prepared_to_stopped(%{}, state)
-  #   end
-  # end
 end

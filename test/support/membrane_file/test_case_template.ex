@@ -7,6 +7,7 @@ defmodule Membrane.File.TestCaseTemplate do
 
     quote do
       import Mox
+      import Membrane.Testing.Assertions
 
       alias Membrane.File.CommonMock
       alias Membrane.Element.CallbackContext.{Prepare, Stop}
@@ -23,21 +24,15 @@ defmodule Membrane.File.TestCaseTemplate do
           |> stub(:truncate!, fn _fd -> :ok end)
 
           assert {[], %{fd: :file}} = unquote(module).handle_setup(ctx, state)
+
+          assert_resource_guard_register(ctx.resource_guard, cleanup_function, _tag)
+
+          CommonMock
+          |> expect(:close!, fn :file -> :ok end)
+
+          cleanup_function.()
         end
       end
-
-      # describe "template: handle_prepared_to_stopped" do
-      #   setup :inject_mock_fd
-
-      #   test "should close file", %{state: state} do
-      #     %{fd: fd} = state
-
-      #     CommonMock
-      #     |> expect(:close!, fn _fd -> :ok end)
-
-      #     assert {[], %{fd: nil}} = unquote(module).handle_prepared_to_stopped(%{}, state)
-      #   end
-      # end
 
       defp inject_mock_fd(%{state: state, ctx: ctx}) do
         %{state: %{state | fd: :file}, ctx: ctx}

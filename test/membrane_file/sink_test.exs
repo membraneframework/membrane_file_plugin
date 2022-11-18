@@ -1,13 +1,15 @@
 defmodule Membrane.File.SinkTest do
   use Membrane.File.TestCaseTemplate, module: Membrane.File.Sink, async: true
 
+  import Membrane.Testing.Assertions
+
   alias Membrane.Buffer
   alias Membrane.File.{CommonMock, SeekEvent}
 
   @module Membrane.File.Sink
 
   defp state_and_ctx(_ctx) do
-    {:ok, resource_guard} = Membrane.ResourceGuard.start_link(self())
+    {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
 
     %{
       ctx: %{resource_guard: resource_guard},
@@ -68,6 +70,15 @@ defmodule Membrane.File.SinkTest do
                  ctx,
                  state
                )
+
+      assert_resource_guard_register(ctx.resource_guard, cleanup_function, {:temp_fd, :temporary})
+
+      CommonMock
+      |> expect(:copy!, fn :temporary, ^file -> 0 end)
+      |> expect(:close!, fn :temporary -> :ok end)
+      |> expect(:rm!, fn ^temp_location -> :ok end)
+
+      cleanup_function.()
     end
 
     test "should write to main file if temporary descriptor is opened", %{state: state, ctx: ctx} do
@@ -100,29 +111,24 @@ defmodule Membrane.File.SinkTest do
     end
   end
 
-  describe "on handle_prepared_to_stopped" do
+  describe "on handle_setup" do
     setup :inject_mock_fd
 
-    # test "should close file", %{state: state} do
-    #   %{fd: file} = state
+    test "should register closing file", %{state: state, ctx: ctx} do
+      %{location: location} = state
 
-    #   CommonMock |> expect(:close!, fn ^file -> :ok end)
+      CommonMock
+      |> expect(:open!, fn ^location, [:read, :write] -> :file end)
+      |> expect(:truncate!, fn :file -> :ok end)
 
-    #   assert {[], %{state | fd: nil}} == @module.handle_prepared_to_stopped(nil, state)
-    # end
+      assert {[], %{fd: :file}} = @module.handle_setup(ctx, state)
 
-    # test "should handle temporary file if temporary descriptor is opened", %{state: state} do
-    #   %{fd: file, temp_location: temp_location} = state
-    #   state = %{state | temp_fd: :temporary}
+      assert_resource_guard_register(ctx.resource_guard, fd_cleanup_function, {:fd, :file})
 
-    #   CommonMock
-    #   |> expect(:copy!, fn :temporary, ^file -> 0 end)
-    #   |> expect(:close!, fn :temporary -> :ok end)
-    #   |> expect(:rm!, fn ^temp_location -> :ok end)
-    #   |> expect(:close!, fn ^file -> :ok end)
+      CommonMock
+      |> expect(:close!, fn :file -> :ok end)
 
-    #   assert {[], %{state | fd: nil, temp_fd: nil}} ==
-    #            @module.handle_prepared_to_stopped(nil, state)
-    # end
+      fd_cleanup_function.()
+    end
   end
 end

@@ -9,7 +9,7 @@ defmodule Membrane.File.SourceTest do
   @module Membrane.File.Source
 
   defp state_and_ctx(_ctx) do
-    {:ok, resource_guard} = Membrane.ResourceGuard.start_link(self())
+    {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
 
     %{
       ctx: %{resource_guard: resource_guard},
