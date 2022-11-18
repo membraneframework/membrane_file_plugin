@@ -1,5 +1,5 @@
 Mix.install([
-  {:membrane_core, "~> 0.10.0"},
+  {:membrane_core, "~> 0.11"},
   {:membrane_file_plugin, path: Path.expand(__DIR__ <> "/..")}
 ])
 
