@@ -11,6 +11,7 @@ defmodule Membrane.File.Sink do
   use Membrane.Sink
 
   alias Membrane.File.SeekEvent
+  alias Membrane.ResourceGuard
 
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
@@ -39,7 +40,8 @@ defmodule Membrane.File.Sink do
 
     Membrane.ResourceGuard.register(
       ctx.resource_guard,
-      fn -> @common_file.close!(fd) end
+      fn -> @common_file.close!(fd) end,
+      tag: {:fd, fd}
     )
 
     {[], %{state | fd: fd}}
@@ -57,52 +59,64 @@ defmodule Membrane.File.Sink do
   end
 
   @impl true
-  def handle_event(:input, %SeekEvent{insert?: insert?, position: position}, _ctx, state) do
+  def handle_event(:input, %SeekEvent{insert?: insert?, position: position}, ctx, state) do
     state =
-      if insert? do
-        split_file(state, position)
-      else
-        seek_file(state, position)
-      end
+      if insert?,
+        do: split_file(state, ctx.resource_guard, position),
+        else: seek_file(state, ctx.resource_guard, position)
 
     {[], state}
   end
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
-  defp seek_file(%{fd: fd} = state, position) do
-    state = maybe_merge_temporary(state)
+  defp seek_file(%{fd: fd} = state, resource_guard, position) do
+    state = maybe_merge_temporary(state, resource_guard)
     _position = @common_file.seek!(fd, position)
     state
   end
 
-  defp split_file(%{fd: fd} = state, position) do
+  defp split_file(%{fd: fd} = state, resource_guard, position) do
     state =
       state
-      |> seek_file(position)
-      |> open_temporary()
+      |> seek_file(resource_guard, position)
+      |> open_temporary(resource_guard)
 
     :ok = @common_file.split!(fd, state.temp_fd)
     state
   end
 
-  defp maybe_merge_temporary(%{temp_fd: nil} = state), do: state
+  defp maybe_merge_temporary(%{temp_fd: nil} = state, _resource_guard), do: state
 
-  defp maybe_merge_temporary(%{fd: fd, temp_fd: temp_fd} = state) do
+  defp maybe_merge_temporary(
+         %{fd: fd, temp_fd: temp_fd, temp_location: temp_location} = state,
+         resource_guard
+       ) do
     # TODO: Consider improving performance for multi-insertion scenarios by using
     # multiple temporary files and merging them only once on `handle_prepared_to_stopped/2`.
-    _bytes_copied = @common_file.copy!(temp_fd, fd)
-    remove_temporary(state)
+    ResourceGuard.unregister(resource_guard, {:temp_fd, temp_fd})
+    copy_and_remove_temporary(fd, temp_fd, temp_location)
+    %{state | temp_fd: nil}
   end
 
-  defp open_temporary(%{temp_fd: nil, temp_location: temp_location} = state) do
+  defp open_temporary(
+         %{temp_fd: nil, fd: fd, temp_location: temp_location} = state,
+         resource_guard
+       ) do
     temp_fd = @common_file.open!(temp_location, [:read, :exclusive])
+
+    ResourceGuard.register(
+      resource_guard,
+      fn -> copy_and_remove_temporary(fd, temp_fd, temp_location) end,
+      tag: {:temp_fd, temp_fd}
+    )
+
     %{state | temp_fd: temp_fd}
   end
 
-  defp remove_temporary(%{temp_fd: temp_fd, temp_location: temp_location} = state) do
+  defp copy_and_remove_temporary(fd, temp_fd, temp_location) do
+    _bytes_copied = @common_file.copy!(temp_fd, fd)
     :ok = @common_file.close!(temp_fd)
     :ok = @common_file.rm!(temp_location)
-    %{state | temp_fd: nil}
   end
 end
