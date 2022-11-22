@@ -61,51 +61,52 @@ defmodule Membrane.File.Sink do
   @impl true
   def handle_event(:input, %SeekEvent{insert?: insert?, position: position}, ctx, state) do
     state =
-      if insert? do
-        split_file(state, ctx, position)
-      else
-        seek_file(state, ctx, position)
-      end
+      if insert?,
+        do: split_file(state, ctx.resource_guard, position),
+        else: seek_file(state, ctx.resource_guard, position)
 
     {[], state}
   end
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
-  defp seek_file(%{fd: fd} = state, ctx, position) do
-    state = maybe_merge_temporary(state, ctx)
+  defp seek_file(%{fd: fd} = state, resource_guard, position) do
+    state = maybe_merge_temporary(state, resource_guard)
     _position = @common_file.seek!(fd, position)
     state
   end
 
-  defp split_file(%{fd: fd} = state, ctx, position) do
+  defp split_file(%{fd: fd} = state, resource_guard, position) do
     state =
       state
-      |> seek_file(ctx, position)
-      |> open_temporary(ctx)
+      |> seek_file(resource_guard, position)
+      |> open_temporary(resource_guard)
 
     :ok = @common_file.split!(fd, state.temp_fd)
     state
   end
 
-  defp maybe_merge_temporary(%{temp_fd: nil} = state, _ctx), do: state
+  defp maybe_merge_temporary(%{temp_fd: nil} = state, _resource_guard), do: state
 
   defp maybe_merge_temporary(
          %{fd: fd, temp_fd: temp_fd, temp_location: temp_location} = state,
-         ctx
+         resource_guard
        ) do
     # TODO: Consider improving performance for multi-insertion scenarios by using
     # multiple temporary files and merging them only once on `handle_prepared_to_stopped/2`.
-    ResourceGuard.unregister(ctx.resource_guard, {:temp_fd, temp_fd})
+    ResourceGuard.unregister(resource_guard, {:temp_fd, temp_fd})
     copy_and_remove_temporary(fd, temp_fd, temp_location)
     %{state | temp_fd: nil}
   end
 
-  defp open_temporary(%{temp_fd: nil, fd: fd, temp_location: temp_location} = state, ctx) do
+  defp open_temporary(
+         %{temp_fd: nil, fd: fd, temp_location: temp_location} = state,
+         resource_guard
+       ) do
     temp_fd = @common_file.open!(temp_location, [:read, :exclusive])
 
     ResourceGuard.register(
-      ctx.resource_guard,
+      resource_guard,
       fn -> copy_and_remove_temporary(fd, temp_fd, temp_location) end,
       tag: {:temp_fd, temp_fd}
     )
