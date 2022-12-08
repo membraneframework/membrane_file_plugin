@@ -70,6 +70,14 @@ defmodule Membrane.File.Sink do
 
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
+  @impl true
+  def handle_terminate_request(ctx, state) do
+    # make sure the last temporary file is merged before the main one is closed by its guard
+    state = maybe_merge_temporary(state, ctx.resource_guard)
+
+    {[terminate: :normal], state}
+  end
+
   defp seek_file(%{fd: fd} = state, resource_guard, position) do
     state = maybe_merge_temporary(state, resource_guard)
     _position = @common_file.seek!(fd, position)
@@ -93,7 +101,7 @@ defmodule Membrane.File.Sink do
          resource_guard
        ) do
     # TODO: Consider improving performance for multi-insertion scenarios by using
-    # multiple temporary files and merging them only once on `handle_prepared_to_stopped/2`.
+    # multiple temporary files and merging them only once on `handle_terminate_request/2`.
     ResourceGuard.unregister(resource_guard, {:temp_fd, temp_fd})
     copy_and_remove_temporary(fd, temp_fd, temp_location)
     %{state | temp_fd: nil}
