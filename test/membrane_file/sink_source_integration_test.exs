@@ -5,8 +5,9 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
   import Membrane.Testing.Assertions
   import Mox, only: [set_mox_global: 1]
 
+  alias Membrane.Buffer
   alias Membrane.File, as: MbrFile
-  alias Membrane.Testing.Pipeline
+  alias Membrane.Testing.{Source, Pipeline}
 
   @moduletag :tmp_dir
 
@@ -34,6 +35,38 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     Pipeline.terminate(pid, blocking?: true)
 
     assert File.read!(ctx.output_path) == ctx.content
+  end
+
+  test "Sink temporary file merge when pipeline terminates", ctx do
+    expected_content = """
+    Roses are red,
+    Violets are blue,
+    If you're reading this,
+    I'm sorry for you.
+    """
+
+    {first_part, second_part} = String.split_at(expected_content, 32)
+
+    actions = [
+      {:buffer, {:output, %Buffer{payload: second_part}}},
+      {:event, {:output, %MbrFile.SeekEvent{position: :bof, insert?: true}}},
+      {:buffer, {:output, %Buffer{payload: first_part}}},
+      {:end_of_stream, :output}
+    ]
+
+    generator = fn state, _size -> {actions, state} end
+
+    structure = [
+      child(:testing_source, %Source{output: {nil, generator}})
+      |> child(:file_sink, %MbrFile.Sink{location: ctx.output_path})
+    ]
+
+    assert pid = Pipeline.start_link_supervised!(structure: structure)
+    assert_start_of_stream(pid, :file_sink, :input)
+    assert_end_of_stream(pid, :file_sink, :input, 5_000)
+    Pipeline.terminate(pid, blocking?: true)
+
+    assert File.read!(ctx.output_path) == expected_content
   end
 
   defmodule EmptyFilter do
