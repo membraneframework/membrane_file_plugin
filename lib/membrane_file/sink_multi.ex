@@ -82,16 +82,21 @@ defmodule Membrane.File.Sink.Multi do
     {[demand: :input], state}
   end
 
-  defp open(%{naming_fun: naming_fun, index: index} = state, ctx) do
-    fd = @common_file.open!(naming_fun.(index), :write)
+  @impl true
+  def handle_terminate_request(_ctx, state) do
+    @common_file.close!(state.fd)
 
-    Membrane.ResourceGuard.register(ctx.resource_guard, fn -> @common_file.close!(fd) end, tag: fd)
+    {[terminate: :normal], %{state | fd: nil}}
+  end
+
+  defp open(%{naming_fun: naming_fun, index: index} = state, _ctx) do
+    fd = @common_file.open!(naming_fun.(index), :write)
 
     %{state | fd: fd}
   end
 
-  defp close(%{fd: fd, index: index} = state, ctx) do
-    Membrane.ResourceGuard.cleanup(ctx.resource_guard, fd)
+  defp close(%{fd: fd, index: index} = state, _ctx) do
+    @common_file.close!(fd)
 
     %{state | fd: nil, index: index + 1}
   end

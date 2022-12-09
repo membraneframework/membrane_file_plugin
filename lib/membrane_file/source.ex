@@ -32,13 +32,8 @@ defmodule Membrane.File.Source do
   end
 
   @impl true
-  def handle_setup(ctx, %{location: location} = state) do
+  def handle_setup(_ctx, %{location: location} = state) do
     fd = @common_file.open!(location, :read)
-
-    Membrane.ResourceGuard.register(
-      ctx.resource_guard,
-      fn -> @common_file.close!(fd) end
-    )
 
     {[], %{state | fd: fd}}
   end
@@ -54,6 +49,13 @@ defmodule Membrane.File.Source do
 
   def handle_demand(:output, size, :bytes, _ctx, state),
     do: supply_demand(size, [], state)
+
+  @impl true
+  def handle_terminate_request(_ctx, state) do
+    @common_file.close!(state.fd)
+
+    {[terminate: :normal], %{state | fd: nil}}
+  end
 
   defp supply_demand(size, redemand, %{fd: fd} = state) do
     actions =

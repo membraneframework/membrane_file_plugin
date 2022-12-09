@@ -9,28 +9,28 @@ defmodule Membrane.File.TestCaseTemplate do
       import Mox
       import Membrane.Testing.Assertions
 
-      alias Membrane.File.CommonMock
-      alias Membrane.Element.CallbackContext.{Prepare, Stop}
-
       setup :verify_on_exit!
 
-      describe "template: handle_setup" do
-        test "should open file", %{state: state, ctx: ctx} do
+      describe "template: common callbacks" do
+        test "on handle_setup should open a file", %{state: state, ctx: ctx} do
           %{location: location} = state
 
-          CommonMock
+          Membrane.File.CommonMock
           |> expect(:open!, fn ^location, _modes -> :file end)
           # in case of opening with `:read` flag, truncating needs to be done explicitly
           |> stub(:truncate!, fn _fd -> :ok end)
 
           assert {[], %{fd: :file}} = unquote(module).handle_setup(ctx, state)
+        end
 
-          assert_resource_guard_register(ctx.resource_guard, cleanup_function, _tag)
+        test "on handle_terminate_request should close the opened file", %{state: state, ctx: ctx} do
+          %{fd: file} = state
 
-          CommonMock
-          |> expect(:close!, fn :file -> :ok end)
+          Membrane.File.CommonMock
+          |> expect(:close!, fn ^file -> :ok end)
 
-          cleanup_function.()
+          assert {[terminate: :normal], %{fd: nil}} =
+                   unquote(module).handle_terminate_request(ctx, state)
         end
       end
 
