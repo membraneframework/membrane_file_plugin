@@ -1,18 +1,14 @@
 defmodule Membrane.File.Sink.MultiTest do
   use Membrane.File.TestCaseTemplate, module: Membrane.File.Sink.Multi, async: true
 
-  import Membrane.Testing.Assertions
-
-  alias Membrane.File.{CommonMock, SplitEvent}
   alias Membrane.Buffer
+  alias Membrane.File.{CommonMock, SplitEvent}
 
   @module Membrane.File.Sink.Multi
 
   defp state_and_ctx(_ctx) do
-    {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
-
     %{
-      ctx: %{resource_guard: resource_guard},
+      ctx: nil,
       state: %{
         location: "",
         fd: nil,
@@ -24,8 +20,6 @@ defmodule Membrane.File.Sink.MultiTest do
   end
 
   setup :state_and_ctx
-
-  setup :verify_on_exit!
 
   describe "handle_write" do
     setup :inject_mock_fd
@@ -55,13 +49,11 @@ defmodule Membrane.File.Sink.MultiTest do
       %{fd: file} = state
 
       CommonMock
+      |> expect(:close!, fn ^file -> :ok end)
       |> expect(:open!, fn "1", _modes -> :new_file end)
 
       assert {[], %{state | index: 1, fd: :new_file}} ==
                @module.handle_event(:input, %SplitEvent{}, ctx, state)
-
-      assert_resource_guard_cleanup(ctx.resource_guard, ^file)
-      assert_resource_guard_register(ctx.resource_guard, _fun, :new_file)
     end
 
     test "should not close current file and open new one if event type is not state.split_on", %{

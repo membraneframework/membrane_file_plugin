@@ -1,25 +1,19 @@
 defmodule Membrane.File.SourceTest do
   use Membrane.File.TestCaseTemplate, module: Membrane.File.Source, async: true
 
-  import Mox
-
-  alias Membrane.File.CommonMock
   alias Membrane.Buffer
+  alias Membrane.File.CommonMock
 
   @module Membrane.File.Source
 
   defp state_and_ctx(_ctx) do
-    {:ok, resource_guard} = Membrane.Testing.MockResourceGuard.start_link()
-
     %{
-      ctx: %{resource_guard: resource_guard},
+      ctx: nil,
       state: %{location: "", chunk_size: nil, fd: nil}
     }
   end
 
   setup :state_and_ctx
-
-  setup :verify_on_exit!
 
   describe "handle_demand buffers" do
     setup :inject_mock_fd
