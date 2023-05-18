@@ -64,11 +64,22 @@ defmodule Membrane.File.Sink do
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
+  def handle_end_of_stream(:input, _ctx, state) do
+    {[], do_merge_and_close(state)}
+  end
+
+  @impl true
   def handle_terminate_request(_ctx, state) do
+    {[terminate: :normal], do_merge_and_close(state)}
+  end
+
+  defp do_merge_and_close(%{fd: nil} = state), do: state
+
+  defp do_merge_and_close(state) do
     state = maybe_merge_temporary(state)
     @common_file.close!(state.fd)
 
-    {[terminate: :normal], %{state | fd: nil}}
+    %{state | fd: nil}
   end
 
   defp seek_file(%{fd: fd} = state, position) do

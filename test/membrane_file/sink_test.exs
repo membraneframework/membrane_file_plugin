@@ -118,4 +118,21 @@ defmodule Membrane.File.SinkTest do
                @module.handle_terminate_request(ctx, state)
     end
   end
+
+  describe "on handle_end_of_stream" do
+    setup :inject_mock_fd
+
+    test "should merge and close the opened files", %{state: state, ctx: ctx} do
+      %{fd: file, temp_location: temp_location} = state
+      state = %{state | temp_fd: :temporary}
+
+      CommonMock
+      |> expect(:copy!, fn :temporary, ^file -> 0 end)
+      |> expect(:close!, fn :temporary -> :ok end)
+      |> expect(:rm!, fn ^temp_location -> :ok end)
+      |> expect(:close!, fn ^file -> :ok end)
+
+      assert {[], %{fd: nil, temp_fd: nil}} = @module.handle_end_of_stream(:input, ctx, state)
+    end
+  end
 end
