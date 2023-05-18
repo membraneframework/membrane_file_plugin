@@ -23,8 +23,8 @@ defmodule Membrane.File.TestCaseTemplate do
           assert {[], %{fd: :file}} = unquote(module).handle_setup(ctx, state)
         end
 
-        test "on handle_terminate_request should close the opened file", %{state: state, ctx: ctx} do
-          %{fd: file} = state
+        test "on handle_terminate_request should close the opened file", context do
+          %{state: %{fd: file} = state, ctx: ctx} = inject_mock_fd(context)
 
           Membrane.File.CommonMock
           |> expect(:close!, fn ^file -> :ok end)
