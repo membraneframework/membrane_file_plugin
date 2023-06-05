@@ -9,7 +9,14 @@ defmodule Membrane.File.SourceTest do
   defp state_and_ctx(_ctx) do
     %{
       ctx: nil,
-      state: %{location: "", chunk_size: nil, fd: nil}
+      state: %{
+        location: "",
+        chunk_size: nil,
+        fd: nil,
+        should_send_eos?: true,
+        size_to_read: :infinity,
+        seekable?: false
+      }
     }
   end
 
@@ -70,11 +77,32 @@ defmodule Membrane.File.SourceTest do
       assert actions == [buffer: {:output, %Buffer{payload: <<1, 2>>}}, end_of_stream: :output]
     end
 
-    test "should send eos event on eof", %{state: state, ctx: ctx} do
+    test "should send eos event on eof is no seek was performed", %{state: state, ctx: ctx} do
       CommonMock
       |> expect(:binread!, fn _file, 5 -> :eof end)
 
       assert {[end_of_stream: :output], state} ==
+               @module.handle_demand(:output, 5, :bytes, ctx, state)
+    end
+
+    test "shouldn't send eos event on eof is seek was performed", %{state: state, ctx: ctx} do
+      state = %{state | seekable?: true, size_to_read: 0}
+
+      CommonMock
+      |> expect(:binread!, fn _file, 5 -> :eof end)
+
+      CommonMock
+      |> expect(:seek!, fn _file, pos -> pos end)
+
+      {[redemand: :output], state} =
+        @module.handle_event(
+          :output,
+          %Membrane.File.SeekSourceEvent{start: 2, size_to_read: 10, last?: false},
+          ctx,
+          state
+        )
+
+      assert {[], state} ==
                @module.handle_demand(:output, 5, :bytes, ctx, state)
     end
   end

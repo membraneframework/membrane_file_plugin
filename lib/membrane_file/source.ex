@@ -6,6 +6,7 @@ defmodule Membrane.File.Source do
   use Membrane.Source
 
   alias Membrane.{Buffer, RemoteStream}
+  alias Membrane.File.SeekSourceEvent
 
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
@@ -17,17 +18,30 @@ defmodule Membrane.File.Source do
                 spec: pos_integer(),
                 default: 2048,
                 description: "Size of chunks being read"
+              ],
+              seekable?: [
+                spec: boolean(),
+                default: false,
+                description: """
+                If true, the source will react to the Membrane.File.SeekSourceEvent.
+                Defaults to false.
+                """
               ]
 
   def_output_pad :output, accepted_format: %RemoteStream{type: :bytestream}
 
   @impl true
-  def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size}) do
+  def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size, seekable?: seekable?}) do
+    size_to_read = if seekable?, do: 0, else: :infinity
+
     {[],
      %{
        location: Path.expand(location),
        chunk_size: size,
-       fd: nil
+       fd: nil,
+       should_send_eos?: not seekable?,
+       size_to_read: size_to_read,
+       seekable?: seekable?
      }}
   end
 
@@ -44,6 +58,27 @@ defmodule Membrane.File.Source do
   end
 
   @impl true
+  def handle_event(
+        :output,
+        %SeekSourceEvent{start: seek_start, size_to_read: size_to_read, last?: last?},
+        _ctx,
+        %{seekable?: true} = state
+      ) do
+    @common_file.seek!(state.fd, seek_start)
+    {[redemand: :output], %{state | should_send_eos?: last?, size_to_read: size_to_read}}
+  end
+
+  @impl true
+  def handle_event(
+        :output,
+        %SeekSourceEvent{},
+        _ctx,
+        %{seekable?: false}
+      ) do
+    raise "Cannot handle `Membrane.File.SeekSourceEvent` in a `#{__MODULE__}` with `seekable?: false` option."
+  end
+
+  @impl true
   def handle_demand(:output, _size, :buffers, _ctx, %{chunk_size: chunk_size} = state),
     do: supply_demand(chunk_size, [redemand: :output], state)
 
@@ -57,18 +92,44 @@ defmodule Membrane.File.Source do
     {[terminate: :normal], %{state | fd: nil}}
   end
 
-  defp supply_demand(size, redemand, %{fd: fd} = state) do
-    actions =
-      case @common_file.binread!(fd, size) do
-        <<payload::binary>> when byte_size(payload) == size ->
-          [buffer: {:output, %Buffer{payload: payload}}] ++ redemand
+  defp supply_demand(demand_size, redemand, %{size_to_read: :infinity} = state) do
+    do_supply_demand(demand_size, redemand, state)
+  end
 
-        <<payload::binary>> when byte_size(payload) < size ->
-          [buffer: {:output, %Buffer{payload: payload}}, end_of_stream: :output]
+  defp supply_demand(_demand_size, _redemand, %{size_to_read: 0} = state) do
+    {[], state}
+  end
+
+  defp supply_demand(demand_size, redemand, %{size_to_read: size_to_read} = state) do
+    do_supply_demand(min(demand_size, size_to_read), redemand, state)
+  end
+
+  defp do_supply_demand(to_supply_size, redemand, state) do
+    {buffer_actions, supplied_size} =
+      case @common_file.binread!(state.fd, to_supply_size) do
+        <<payload::binary>> ->
+          {[buffer: {:output, %Buffer{payload: payload}}], byte_size(payload)}
 
         :eof ->
-          [end_of_stream: :output]
+          {[], 0}
       end
+
+    new_size_to_read =
+      if state.size_to_read == :infinity, do: :infinity, else: state.size_to_read - supplied_size
+
+    state = %{state | size_to_read: new_size_to_read}
+
+    actions =
+      buffer_actions ++
+        if state.should_send_eos? and (state.size_to_read == 0 or supplied_size < to_supply_size) do
+          [end_of_stream: :output]
+        else
+          if to_supply_size == supplied_size do
+            redemand
+          else
+            []
+          end
+        end
 
     {actions, state}
   end

@@ -1,4 +1,4 @@
-defmodule Membrane.File.SeekEvent do
+defmodule Membrane.File.SeekSinkEvent do
   @moduledoc """
   Event that triggers seeking or insertion to a file in `Membrane.File.Sink`.
 

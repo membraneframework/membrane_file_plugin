@@ -2,15 +2,15 @@ defmodule Membrane.File.Sink do
   @moduledoc """
   Element that creates a file and stores incoming buffers there (in binary format).
 
-  When `Membrane.File.SeekEvent` is received, the element starts writing buffers starting
+  When `Membrane.File.SeekSinkEvent` is received, the element starts writing buffers starting
   from `position`. By default, it overwrites previously stored bytes. You can set `insert?`
   field of the event to `true` to start inserting new buffers without overwriting previous ones.
   Please note, that inserting requires rewriting the file, what negatively impacts performance.
-  For more information refer to `Membrane.File.SeekEvent` moduledoc.
+  For more information refer to `Membrane.File.SeekSinkEvent` moduledoc.
   """
   use Membrane.Sink
 
-  alias Membrane.File.SeekEvent
+  alias Membrane.File.SeekSinkEvent
 
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
@@ -52,7 +52,7 @@ defmodule Membrane.File.Sink do
   end
 
   @impl true
-  def handle_event(:input, %SeekEvent{insert?: insert?, position: position}, _ctx, state) do
+  def handle_event(:input, %SeekSinkEvent{insert?: insert?, position: position}, _ctx, state) do
     state =
       if insert?,
         do: split_file(state, position),
