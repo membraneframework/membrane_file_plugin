@@ -2,7 +2,7 @@ defmodule Membrane.File.CommonFileBehaviour do
   @moduledoc false
 
   alias Membrane.Buffer
-  alias Membrane.File.SeekEvent
+  alias Membrane.File.SeekSinkEvent
 
   @common_file_impl Application.compile_env(
                       :membrane_file_plugin,
@@ -23,9 +23,9 @@ defmodule Membrane.File.CommonFileBehaviour do
   @callback write(File.io_device(), Buffer.t()) :: :ok | posix_error_t()
   @callback write!(File.io_device(), Buffer.t()) :: :ok
 
-  @callback seek(File.io_device(), SeekEvent.position_t()) ::
+  @callback seek(File.io_device(), SeekSinkEvent.position_t()) ::
               {:ok, integer()} | generic_error_t()
-  @callback seek!(File.io_device(), SeekEvent.position_t()) :: integer()
+  @callback seek!(File.io_device(), SeekSinkEvent.position_t()) :: integer()
 
   @callback copy(File.io_device(), File.io_device()) ::
               {:ok, non_neg_integer()} | generic_error_t()
