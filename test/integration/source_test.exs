@@ -35,8 +35,6 @@ defmodule Membrane.File.Integration.SourceTest do
   @input_text_file "test/fixtures/input.txt"
 
   test "if seekable Source sents only the buffers requested" do
-    # Membrane.File.CommonMock.open!("test/fixtures/input.txt", [])
-
     spec = [
       child(:source, %Source{
         location: @input_text_file,

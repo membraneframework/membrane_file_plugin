@@ -3,7 +3,7 @@ defmodule Membrane.File.Source do
   Element that reads chunks of data from given file and sends them as buffers
   through the output pad.
 
-  Can work in two modes, detrmined by the `seekable?` option.
+  Can work in two modes, determined by the `seekable?` option.
   With `seekable?: false`, the source will start reading data from the file exactly the moment it starts
   playing and will read it till the end of file, setting the `end_of_stream` action on the `:output` pad
   when the reading is done.
@@ -31,8 +31,8 @@ defmodule Membrane.File.Source do
                 spec: boolean(),
                 default: false,
                 description: """
-                If true, the source will react to the Membrane.File.SeekSourceEvent.
-                Defaults to false.
+                If true, the source will be steered by the `Membrane.File.SeekSourceEvent`
+                events. Defaults to false.
                 """
               ]
 
