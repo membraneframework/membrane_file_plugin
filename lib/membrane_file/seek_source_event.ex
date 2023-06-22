@@ -17,7 +17,7 @@ defmodule Membrane.File.SeekSourceEvent do
 
   @type t :: %__MODULE__{
           start: position_t(),
-          size_to_read: non_neg_integer(),
+          size_to_read: non_neg_integer() | :infinity,
           last?: boolean()
         }
 
