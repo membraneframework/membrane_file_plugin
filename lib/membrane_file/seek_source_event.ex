@@ -20,6 +20,6 @@ defmodule Membrane.File.SeekSourceEvent do
           size_to_read: non_neg_integer() | :infinity,
           last?: boolean()
         }
-
-  defstruct [:start, :size_to_read, last?: false]
+  @enforce_keys [:start, :size_to_read]
+  defstruct @enforce_keys ++ [last?: false]
 end

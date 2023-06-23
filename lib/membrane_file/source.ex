@@ -73,7 +73,9 @@ defmodule Membrane.File.Source do
         %{seekable?: true} = state
       ) do
     @common_file.seek!(state.fd, seek_start)
-    {[redemand: :output], %{state | should_send_eos?: last?, size_to_read: size_to_read}}
+
+    {[event: {:output, %Membrane.File.NewSeekEvent{}}, redemand: :output],
+     %{state | should_send_eos?: last?, size_to_read: size_to_read}}
   end
 
   @impl true
