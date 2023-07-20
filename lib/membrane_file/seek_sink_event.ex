@@ -16,7 +16,7 @@ defmodule Membrane.File.SeekSinkEvent do
 
   @type offset_t :: integer()
 
-  @typespec """
+  @typedoc """
   Specifies the position to which the seek is performed.
 
   The meaning is the same as for the `Location` argument in https://www.erlang.org/doc/man/file.html#position-2.
