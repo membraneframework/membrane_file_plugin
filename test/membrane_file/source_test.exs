@@ -3,6 +3,7 @@ defmodule Membrane.File.SourceTest do
 
   alias Membrane.Buffer
   alias Membrane.File.CommonMock
+  alias Membrane.File.NewSeekEvent
 
   @module Membrane.File.Source
 
@@ -94,7 +95,7 @@ defmodule Membrane.File.SourceTest do
       CommonMock
       |> expect(:seek!, fn _file, pos -> pos end)
 
-      {[event: {:output, %Membrane.File.NewSeekEvent{}}, redemand: :output], state} =
+      {[event: {:output, %NewSeekEvent{}}, redemand: :output], state} =
         @module.handle_event(
           :output,
           %Membrane.File.SeekSourceEvent{start: 2, size_to_read: 10, last?: false},

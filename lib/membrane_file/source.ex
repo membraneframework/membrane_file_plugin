@@ -4,16 +4,11 @@ defmodule Membrane.File.Source do
   through the output pad.
 
   Can work in two modes, determined by the `seekable?` option.
-  With `seekable?: false`, the source will start reading data from the file exactly the moment it starts
-  playing and will read it till the end of file, setting the `end_of_stream` action on the `:output` pad
-  when the reading is done.
-  With `seekable?: true`, the process of reading is driven by receiving `Membrane.File.SeekSourceEvent` events.
-  The source working in `seekable?: true` mode won't send any data before that event is received.
-  For more information about how to steer reading in `seekable?: true` mode, see: `Membrane.File.SeekSourceEvent`.
   """
   use Membrane.Source
 
   alias Membrane.{Buffer, RemoteStream}
+  alias Membrane.File.NewSeekEvent
   alias Membrane.File.SeekSourceEvent
 
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
@@ -31,8 +26,12 @@ defmodule Membrane.File.Source do
                 spec: boolean(),
                 default: false,
                 description: """
-                If true, the source will be steered by the `Membrane.File.SeekSourceEvent`
-                events. Defaults to false.
+                With `seekable?: false`, the source will start reading data from the file exactly the moment it starts
+                playing and will read it till the end of file, setting the `end_of_stream` action on the `:output` pad
+                when the reading is done.
+                With `seekable?: true`, the process of reading is driven by receiving `Membrane.File.SeekSourceEvent` events.
+                The source working in `seekable?: true` mode won't send any data before that event is received.
+                For more information about how to steer reading in `seekable?: true` mode, see: `Membrane.File.SeekSourceEvent`.
                 """
               ]
 
@@ -74,7 +73,7 @@ defmodule Membrane.File.Source do
       ) do
     @common_file.seek!(state.fd, seek_start)
 
-    {[event: {:output, %Membrane.File.NewSeekEvent{}}, redemand: :output],
+    {[event: {:output, %NewSeekEvent{}}, redemand: :output],
      %{state | should_send_eos?: last?, size_to_read: size_to_read}}
   end
 
@@ -131,14 +130,15 @@ defmodule Membrane.File.Source do
 
     actions =
       buffer_actions ++
-        if state.should_send_eos? and (state.size_to_read == 0 or supplied_size < to_supply_size) do
-          [end_of_stream: :output]
-        else
-          if to_supply_size == supplied_size do
+        cond do
+          state.should_send_eos? and (state.size_to_read == 0 or supplied_size < to_supply_size) ->
+            [end_of_stream: :output]
+
+          to_supply_size == supplied_size ->
             redemand
-          else
+
+          true ->
             []
-          end
         end
 
     {actions, state}
