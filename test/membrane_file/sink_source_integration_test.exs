@@ -49,7 +49,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
 
     actions = [
       {:buffer, {:output, %Buffer{payload: second_part}}},
-      {:event, {:output, %MbrFile.SeekEvent{position: :bof, insert?: true}}},
+      {:event, {:output, %MbrFile.SeekSinkEvent{position: :bof, insert?: true}}},
       {:buffer, {:output, %Buffer{payload: first_part}}},
       {:end_of_stream, :output}
     ]

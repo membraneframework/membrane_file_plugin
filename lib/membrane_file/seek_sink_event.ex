@@ -1,4 +1,4 @@
-defmodule Membrane.File.SeekEvent do
+defmodule Membrane.File.SeekSinkEvent do
   @moduledoc """
   Event that triggers seeking or insertion to a file in `Membrane.File.Sink`.
 
@@ -15,6 +15,12 @@ defmodule Membrane.File.SeekEvent do
   @derive Membrane.EventProtocol
 
   @type offset_t :: integer()
+
+  @typedoc """
+  Specifies the position to which the seek is performed.
+
+  The meaning is the same as for the `Location` argument in https://www.erlang.org/doc/man/file.html#position-2.
+  """
   @type position_t :: offset_t() | {:bof | :cur | :eof, offset_t()} | :bof | :cur | :eof
 
   @type t :: %__MODULE__{

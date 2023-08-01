@@ -2,7 +2,7 @@ defmodule Membrane.File.SinkTest do
   use Membrane.File.TestCaseTemplate, module: Membrane.File.Sink, async: true
 
   alias Membrane.Buffer
-  alias Membrane.File.{CommonMock, SeekEvent}
+  alias Membrane.File.{CommonMock, SeekSinkEvent}
 
   @module Membrane.File.Sink
 
@@ -37,7 +37,7 @@ defmodule Membrane.File.SinkTest do
     end
   end
 
-  describe "on SeekEvent" do
+  describe "on SeekSinkEvent" do
     setup :inject_mock_fd
 
     test "should change file descriptor position", %{state: state, ctx: ctx} do
@@ -47,7 +47,7 @@ defmodule Membrane.File.SinkTest do
       CommonMock |> expect(:seek!, fn ^file, ^position -> 32 end)
 
       assert {[], %{fd: ^file, temp_fd: nil}} =
-               @module.handle_event(:input, %SeekEvent{position: position}, ctx, state)
+               @module.handle_event(:input, %SeekSinkEvent{position: position}, ctx, state)
     end
 
     test "should change file descriptor position and split file if insertion is enabled", %{
@@ -65,7 +65,7 @@ defmodule Membrane.File.SinkTest do
       assert {[], %{fd: ^file, temp_fd: :temporary}} =
                @module.handle_event(
                  :input,
-                 %SeekEvent{position: position, insert?: true},
+                 %SeekSinkEvent{position: position, insert?: true},
                  ctx,
                  state
                )
@@ -97,7 +97,7 @@ defmodule Membrane.File.SinkTest do
       |> expect(:seek!, fn ^file, ^position -> 32 end)
 
       assert {[], %{fd: ^file, temp_fd: nil}} =
-               @module.handle_event(:input, %SeekEvent{position: position}, ctx, state)
+               @module.handle_event(:input, %SeekSinkEvent{position: position}, ctx, state)
     end
   end
 
