@@ -27,7 +27,7 @@ defmodule Membrane.File.Integration.SourceTest do
     end
 
     @impl true
-    def handle_process(:input, buffer, _context, state) do
+    def handle_buffer(:input, buffer, _context, state) do
       {[buffer: {:output, buffer}], state}
     end
   end

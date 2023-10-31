@@ -80,7 +80,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     def_output_pad :output, demand_mode: :auto, accepted_format: Membrane.RemoteStream
 
     @impl true
-    def handle_process(:input, buffer, _ctx, state) do
+    def handle_buffer(:input, buffer, _ctx, state) do
       {[buffer: {:output, buffer}], state}
     end
   end
@@ -121,7 +121,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     end
 
     @impl true
-    def handle_process(:input, buffer, _ctx, %{head_size: head_size, split?: true}) do
+    def handle_buffer(:input, buffer, _ctx, %{head_size: head_size, split?: true}) do
       <<head::binary-size(head_size), tail::binary>> = buffer.payload
 
       actions = [
@@ -133,7 +133,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
       {actions, %{split?: false}}
     end
 
-    def handle_process(:input, buffer, _ctx, %{split?: false}) do
+    def handle_buffer(:input, buffer, _ctx, %{split?: false}) do
       {[buffer: {:output, buffer}], %{split?: false}}
     end
   end
