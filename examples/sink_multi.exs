@@ -45,13 +45,13 @@ defmodule SinkMultiExamplePipeline do
   @doc false
   @impl true
   def handle_init(_ctx, target) do
-    structure = [
+    spec = [
       child(:file_source, %Membrane.File.Source{location: "input.bin"})
       |> child(:filter, %Splitter{head_size: 10})
       |> child(:file_sink, %Membrane.File.Sink.Multi{location: "/tmp/output", extension: ".bin"})
     ]
 
-    {[spec: structure], %{target: target}}
+    {[spec: spec], %{target: target}}
   end
 
   @impl true

@@ -40,7 +40,7 @@ defmodule Membrane.File.Integration.SourceTest do
       |> child(:sink, Sink)
     ]
 
-    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(structure: spec)
+    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(spec: spec)
     refute_sink_buffer(pipeline_pid, :sink, _)
 
     Pipeline.execute_actions(pipeline_pid,
@@ -80,7 +80,7 @@ defmodule Membrane.File.Integration.SourceTest do
       |> child(:sink, Sink)
     ]
 
-    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(structure: spec)
+    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(spec: spec)
     refute_sink_buffer(pipeline_pid, :sink, _)
 
     Pipeline.execute_actions(pipeline_pid,
