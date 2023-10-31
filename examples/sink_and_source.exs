@@ -14,7 +14,7 @@ defmodule FileExamplePipeline do
       |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/test"})
     ]
 
-    {[spec: structure, playback: :playing], %{target: target}}
+    {[spec: structure], %{target: target}}
   end
 
   @impl true

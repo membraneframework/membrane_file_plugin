@@ -51,7 +51,7 @@ defmodule SinkMultiExamplePipeline do
       |> child(:file_sink, %Membrane.File.Sink.Multi{location: "/tmp/output", extension: ".bin"})
     ]
 
-    {[spec: structure, playback: :playing], %{target: target}}
+    {[spec: structure], %{target: target}}
   end
 
   @impl true
