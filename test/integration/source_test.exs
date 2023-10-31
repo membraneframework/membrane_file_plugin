@@ -13,13 +13,8 @@ defmodule Membrane.File.Integration.SourceTest do
   defmodule Filter do
     use Membrane.Filter
 
-    def_input_pad :input,
-      accepted_format: _,
-      mode: :pull,
-      demand_mode: :auto,
-      demand_unit: :bytes
-
-    def_output_pad :output, accepted_format: _, mode: :pull, demand_mode: :auto
+    def_input_pad :input, accepted_format: _
+    def_output_pad :output, accepted_format: _, flow_control: :manual
 
     @impl true
     def handle_parent_notification(event, _context, state) do

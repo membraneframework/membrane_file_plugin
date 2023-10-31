@@ -72,12 +72,8 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
   defmodule EmptyFilter do
     use Membrane.Filter
 
-    def_input_pad :input,
-      demand_unit: :bytes,
-      demand_mode: :auto,
-      accepted_format: Membrane.RemoteStream
-
-    def_output_pad :output, demand_mode: :auto, accepted_format: Membrane.RemoteStream
+    def_input_pad :input, accepted_format: Membrane.RemoteStream
+    def_output_pad :output, accepted_format: Membrane.RemoteStream
 
     @impl true
     def handle_buffer(:input, buffer, _ctx, state) do
@@ -106,12 +102,8 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     alias Membrane.Buffer
     alias Membrane.File.SplitEvent
 
-    def_input_pad :input,
-      demand_unit: :bytes,
-      demand_mode: :auto,
-      accepted_format: Membrane.RemoteStream
-
-    def_output_pad :output, demand_mode: :auto, accepted_format: Membrane.RemoteStream
+    def_input_pad :input, accepted_format: Membrane.RemoteStream
+    def_output_pad :output, accepted_format: Membrane.RemoteStream
 
     def_options head_size: [type: :integer]
 

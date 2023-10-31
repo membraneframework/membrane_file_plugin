@@ -43,7 +43,7 @@ defmodule Membrane.File.Sink.Multi do
   @spec default_naming_fun(Path.t(), non_neg_integer(), String.t()) :: Path.t()
   def default_naming_fun(path, i, ext), do: [path, i, ext] |> Enum.join() |> Path.expand()
 
-  def_input_pad :input, demand_unit: :buffers, accepted_format: _any
+  def_input_pad :input, flow_control: :manual, demand_unit: :buffers, accepted_format: _any
 
   @impl true
   def handle_init(_ctx, %__MODULE__{} = options) do

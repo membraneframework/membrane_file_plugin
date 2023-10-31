@@ -35,7 +35,7 @@ defmodule Membrane.File.Source do
                 """
               ]
 
-  def_output_pad :output, accepted_format: %RemoteStream{type: :bytestream}
+  def_output_pad :output, flow_control: :manual, accepted_format: %RemoteStream{type: :bytestream}
 
   @impl true
   def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size, seekable?: seekable?}) do
