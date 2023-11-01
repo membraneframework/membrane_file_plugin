@@ -32,7 +32,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path) == ctx.content
   end
@@ -64,7 +64,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     assert pid = Pipeline.start_link_supervised!(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path) == expected_content
   end
@@ -91,7 +91,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path) == ctx.content
   end
@@ -142,7 +142,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path <> "0.bin") == binary_part(ctx.content, 0, head_size)
 
