@@ -14,7 +14,7 @@ defmodule Membrane.File.Integration.SourceTest do
     use Membrane.Filter
 
     def_input_pad :input, accepted_format: _
-    def_output_pad :output, accepted_format: _, flow_control: :manual
+    def_output_pad :output, accepted_format: _
 
     @impl true
     def handle_parent_notification(event, _context, state) do
@@ -33,7 +33,7 @@ defmodule Membrane.File.Integration.SourceTest do
     spec = [
       child(:source, %Source{
         location: @input_text_file,
-        chunk_size: 2,
+        chunk_size: 5,
         seekable?: true
       })
       |> child(:filter, Filter)
@@ -73,7 +73,7 @@ defmodule Membrane.File.Integration.SourceTest do
     spec = [
       child(:source, %Source{
         location: @input_text_file,
-        chunk_size: 2,
+        chunk_size: 5,
         seekable?: true
       })
       |> child(:filter, Filter)
