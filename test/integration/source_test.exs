@@ -15,11 +15,9 @@ defmodule Membrane.File.Integration.SourceTest do
 
     def_input_pad :input,
       accepted_format: _,
-      mode: :pull,
-      demand_mode: :auto,
-      demand_unit: :bytes
+      flow_control: :auto
 
-    def_output_pad :output, accepted_format: _, mode: :pull, demand_mode: :auto
+    def_output_pad :output, accepted_format: _, flow_control: :auto
 
     @impl true
     def handle_parent_notification(event, _context, state) do
@@ -27,7 +25,7 @@ defmodule Membrane.File.Integration.SourceTest do
     end
 
     @impl true
-    def handle_process(:input, buffer, _context, state) do
+    def handle_buffer(:input, buffer, _context, state) do
       {[buffer: {:output, buffer}], state}
     end
   end
@@ -38,14 +36,13 @@ defmodule Membrane.File.Integration.SourceTest do
     spec = [
       child(:source, %Source{
         location: @input_text_file,
-        chunk_size: 2,
         seekable?: true
       })
       |> child(:filter, Filter)
       |> child(:sink, Sink)
     ]
 
-    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(structure: spec)
+    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(spec: spec)
     refute_sink_buffer(pipeline_pid, :sink, _)
 
     Pipeline.execute_actions(pipeline_pid,
@@ -78,14 +75,13 @@ defmodule Membrane.File.Integration.SourceTest do
     spec = [
       child(:source, %Source{
         location: @input_text_file,
-        chunk_size: 2,
         seekable?: true
       })
       |> child(:filter, Filter)
       |> child(:sink, Sink)
     ]
 
-    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(structure: spec)
+    {:ok, _supervisor_pid, pipeline_pid} = Pipeline.start(spec: spec)
     refute_sink_buffer(pipeline_pid, :sink, _)
 
     Pipeline.execute_actions(pipeline_pid,

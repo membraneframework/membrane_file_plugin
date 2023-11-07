@@ -21,7 +21,7 @@ defmodule Membrane.File.Sink.MultiTest do
 
   setup :state_and_ctx
 
-  describe "handle_write" do
+  describe "handle_buffer" do
     setup :inject_mock_fd
 
     test "should write received chunk and request demand", %{state: state} do
@@ -31,7 +31,7 @@ defmodule Membrane.File.Sink.MultiTest do
       CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
 
       assert {[demand: :input], state} ==
-               @module.handle_write(:input, buffer, nil, state)
+               @module.handle_buffer(:input, buffer, nil, state)
     end
   end
 
