@@ -10,8 +10,8 @@ defmodule Splitter do
   alias Membrane.Buffer
   alias Membrane.File.SplitEvent
 
-  def_input_pad :input, demand_unit: :bytes, demand_mode: :auto, accepted_format: Membrane.RemoteStream
-  def_output_pad :output, demand_mode: :auto, accepted_format: Membrane.RemoteStream
+  def_input_pad :input, flow_control: :auto, accepted_format: Membrane.RemoteStream
+  def_output_pad :output, flow_control: :auto, accepted_format: Membrane.RemoteStream
 
   def_options head_size: [type: :integer]
 
@@ -20,7 +20,7 @@ defmodule Splitter do
   end
 
   @impl true
-  def handle_process(:input, buffer, _ctx, %{head_size: head_size, split?: true}) do
+  def handle_buffer(:input, buffer, _ctx, %{head_size: head_size, split?: true}) do
     <<head::binary-size(head_size), tail::binary>> = buffer.payload
 
     actions = [
@@ -32,7 +32,7 @@ defmodule Splitter do
     { actions, %{split?: false}}
   end
 
-  def handle_process(:input, buffer, _ctx, %{split?: false}) do
+  def handle_buffer(:input, buffer, _ctx, %{split?: false}) do
     {[buffer: {:output, buffer}], %{split?: false}}
   end
 end
@@ -45,13 +45,13 @@ defmodule SinkMultiExamplePipeline do
   @doc false
   @impl true
   def handle_init(_ctx, target) do
-    structure = [
+    spec = [
       child(:file_source, %Membrane.File.Source{location: "input.bin"})
       |> child(:filter, %Splitter{head_size: 10})
       |> child(:file_sink, %Membrane.File.Sink.Multi{location: "/tmp/output", extension: ".bin"})
     ]
 
-    {[spec: structure, playback: :playing], %{target: target}}
+    {[spec: spec, playback: :playing], %{target: target}}
   end
 
   @impl true

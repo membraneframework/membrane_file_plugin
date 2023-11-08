@@ -24,7 +24,7 @@ defmodule Membrane.File.SinkTest do
     end
   end
 
-  describe "on handle_write" do
+  describe "on handle_buffer" do
     setup :inject_mock_fd
 
     test "should write received chunk and request demand", %{state: state, ctx: ctx} do
@@ -33,7 +33,7 @@ defmodule Membrane.File.SinkTest do
 
       CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
 
-      assert {[demand: :input], _state} = @module.handle_write(:input, buffer, ctx, state)
+      assert {[demand: :input], _state} = @module.handle_buffer(:input, buffer, ctx, state)
     end
   end
 
@@ -79,7 +79,7 @@ defmodule Membrane.File.SinkTest do
       CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
 
       assert {[demand: :input], %{fd: ^file, temp_fd: :temporary}} =
-               @module.handle_write(:input, buffer, ctx, state)
+               @module.handle_buffer(:input, buffer, ctx, state)
     end
 
     test "should merge, close and remove temporary file if temporary descriptor is opened", %{

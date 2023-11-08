@@ -24,15 +24,15 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
   end
 
   test "File copy", ctx do
-    structure = [
+    spec = [
       child(:file_source, %MbrFile.Source{location: ctx.input_path})
       |> child(:file_sink, %MbrFile.Sink{location: ctx.output_path})
     ]
 
-    assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(structure: structure)
+    assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path) == ctx.content
   end
@@ -56,15 +56,15 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
 
     generator = fn state, _size -> {actions, state} end
 
-    structure = [
+    spec = [
       child(:testing_source, %Source{output: {nil, generator}})
       |> child(:file_sink, %MbrFile.Sink{location: ctx.output_path})
     ]
 
-    assert pid = Pipeline.start_link_supervised!(structure: structure)
+    assert pid = Pipeline.start_link_supervised!(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path) == expected_content
   end
@@ -73,29 +73,28 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     use Membrane.Filter
 
     def_input_pad :input,
-      demand_unit: :bytes,
-      demand_mode: :auto,
+      flow_control: :auto,
       accepted_format: Membrane.RemoteStream
 
-    def_output_pad :output, demand_mode: :auto, accepted_format: Membrane.RemoteStream
+    def_output_pad :output, flow_control: :auto, accepted_format: Membrane.RemoteStream
 
     @impl true
-    def handle_process(:input, buffer, _ctx, state) do
+    def handle_buffer(:input, buffer, _ctx, state) do
       {[buffer: {:output, buffer}], state}
     end
   end
 
   test "File copy with filter", ctx do
-    structure = [
+    spec = [
       child(:file_source, %MbrFile.Source{location: ctx.input_path})
       |> child(:filter, EmptyFilter)
       |> child(:file_sink, %MbrFile.Sink{location: ctx.output_path})
     ]
 
-    assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(structure: structure)
+    assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path) == ctx.content
   end
@@ -107,11 +106,10 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     alias Membrane.File.SplitEvent
 
     def_input_pad :input,
-      demand_unit: :bytes,
-      demand_mode: :auto,
+      flow_control: :auto,
       accepted_format: Membrane.RemoteStream
 
-    def_output_pad :output, demand_mode: :auto, accepted_format: Membrane.RemoteStream
+    def_output_pad :output, flow_control: :auto, accepted_format: Membrane.RemoteStream
 
     def_options head_size: [type: :integer]
 
@@ -121,7 +119,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
     end
 
     @impl true
-    def handle_process(:input, buffer, _ctx, %{head_size: head_size, split?: true}) do
+    def handle_buffer(:input, buffer, _ctx, %{head_size: head_size, split?: true}) do
       <<head::binary-size(head_size), tail::binary>> = buffer.payload
 
       actions = [
@@ -133,7 +131,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
       {actions, %{split?: false}}
     end
 
-    def handle_process(:input, buffer, _ctx, %{split?: false}) do
+    def handle_buffer(:input, buffer, _ctx, %{split?: false}) do
       {[buffer: {:output, buffer}], %{split?: false}}
     end
   end
@@ -141,16 +139,16 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
   test "MultiSink with splitter", ctx do
     head_size = 10
 
-    structure = [
+    spec = [
       child(:file_source, %MbrFile.Source{location: ctx.input_path})
       |> child(:filter, %Splitter{head_size: head_size})
       |> child(:file_sink, %MbrFile.Sink.Multi{location: ctx.output_path, extension: ".bin"})
     ]
 
-    assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(structure: structure)
+    assert {:ok, _supervisor_pid, pid} = Pipeline.start_link(spec: spec)
     assert_start_of_stream(pid, :file_sink, :input)
     assert_end_of_stream(pid, :file_sink, :input, 5_000)
-    Pipeline.terminate(pid, blocking?: true)
+    Pipeline.terminate(pid)
 
     assert File.read!(ctx.output_path <> "0.bin") == binary_part(ctx.content, 0, head_size)
 

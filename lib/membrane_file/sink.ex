@@ -19,7 +19,7 @@ defmodule Membrane.File.Sink do
                 description: "Path of the output file"
               ]
 
-  def_input_pad :input, demand_unit: :buffers, accepted_format: _any
+  def_input_pad :input, flow_control: :manual, demand_unit: :buffers, accepted_format: _any
 
   @impl true
   def handle_init(_ctx, %__MODULE__{location: location}) do
@@ -46,7 +46,7 @@ defmodule Membrane.File.Sink do
   end
 
   @impl true
-  def handle_write(:input, buffer, _ctx, %{fd: fd} = state) do
+  def handle_buffer(:input, buffer, _ctx, %{fd: fd} = state) do
     :ok = @common_file.write!(fd, buffer)
     {[demand: :input], state}
   end
