@@ -1,9 +1,13 @@
 Mix.install([
-  {:membrane_core, "~> 0.11"},
+  {:membrane_core, "~> 1.0"},
   {:membrane_file_plugin, path: Path.expand(__DIR__ <> "/..")}
 ])
 
 defmodule FileExamplePipeline do
+  @doc """
+  Example pipeline that reads its source code file and outputs it to /tmp/test.
+  """
+
   use Membrane.Pipeline
 
   @doc false
@@ -14,18 +18,18 @@ defmodule FileExamplePipeline do
       |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/test"})
     ]
 
-    {[spec: spec, playback: :playing], %{target: target}}
+    {[spec: spec], %{target: target}}
   end
 
   @impl true
-  def handle_element_end_of_stream({:file_sink, :input}, _ctx, state) do
+  def handle_element_end_of_stream(:file_sink, :input, _ctx, state) do
     send(state.target, :done)
     {[], state}
   end
 end
 
-{:ok, _supervisor_pid, pid} = FileExamplePipeline.start_link(self())
+{:ok, _supervisor_pid, pid} = Membrane.Pipeline.start_link(FileExamplePipeline, self())
 
 receive do
-  :done -> FileExamplePipeline.terminate(pid)
+  :done -> Membrane.Pipeline.terminate(pid)
 end
