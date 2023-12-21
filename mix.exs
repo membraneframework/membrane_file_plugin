@@ -41,6 +41,7 @@ defmodule Membrane.File.Plugin.Mixfile do
       {:membrane_core, "~> 1.0"},
       # Testing
       {:mox, "~> 1.0", only: :test},
+      {:logger_backends, "~> 1.0", only: :test},
       # Development
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:credo, "~> 1.6", only: :dev, runtime: false},

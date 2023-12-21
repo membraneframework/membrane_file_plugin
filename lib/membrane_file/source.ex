@@ -14,8 +14,8 @@ defmodule Membrane.File.Source do
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
   def_options location: [
-                spec: Path.t(),
-                description: "Path to the file"
+                spec: Path.t() | :stdin,
+                description: "Path to the file or :stdin"
               ],
               chunk_size: [
                 spec: pos_integer(),
@@ -38,6 +38,22 @@ defmodule Membrane.File.Source do
   def_output_pad :output, accepted_format: %RemoteStream{type: :bytestream}, flow_control: :manual
 
   @impl true
+  def handle_init(_ctx, %__MODULE__{location: :stdin, chunk_size: size, seekable?: seekable?}) do
+    if seekable? do
+      raise "Cannot seek when reading from :stdin"
+    else
+      {[],
+       %{
+         location: :stdin,
+         chunk_size: size,
+         should_send_eos: true,
+         size_to_read: :infinity,
+         seekable?: false
+       }}
+    end
+  end
+
+  @impl true
   def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size, seekable?: seekable?}) do
     size_to_read = if seekable?, do: 0, else: :infinity
 
@@ -50,6 +66,11 @@ defmodule Membrane.File.Source do
        size_to_read: size_to_read,
        seekable?: seekable?
      }}
+  end
+
+  @impl true
+  def handle_setup(_ctx, %{location: :stdin} = state) do
+    {[], state}
   end
 
   @impl true
@@ -95,6 +116,11 @@ defmodule Membrane.File.Source do
     do: supply_demand(size, [], state)
 
   @impl true
+  def handle_terminate_request(_ctx, %{location: :stdin} = state) do
+    {[terminate: :normal], state}
+  end
+
+  @impl true
   def handle_terminate_request(_ctx, state) do
     @common_file.close!(state.fd)
 
@@ -111,6 +137,32 @@ defmodule Membrane.File.Source do
 
   defp supply_demand(demand_size, redemand, %{size_to_read: size_to_read} = state) do
     do_supply_demand(min(demand_size, size_to_read), redemand, state)
+  end
+
+  defp do_supply_demand(to_supply_size, redemand, %{location: :stdin} = state) do
+    {buffer_actions, supplied_size} =
+      case IO.binread(to_supply_size) do
+        <<payload::binary>> ->
+          {[buffer: {:output, %Buffer{payload: payload}}], byte_size(payload)}
+
+        :eof ->
+          {[], 0}
+      end
+
+    actions =
+      buffer_actions ++
+        cond do
+          supplied_size < to_supply_size ->
+            [end_of_stream: :output]
+
+          supplied_size == to_supply_size ->
+            redemand
+
+          true ->
+            []
+        end
+
+    {actions, state}
   end
 
   defp do_supply_demand(to_supply_size, redemand, state) do

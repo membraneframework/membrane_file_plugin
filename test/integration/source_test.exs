@@ -14,10 +14,12 @@ defmodule Membrane.File.Integration.SourceTest do
     use Membrane.Filter
 
     def_input_pad :input,
-      accepted_format: _,
+      accepted_format: _any,
       flow_control: :auto
 
-    def_output_pad :output, accepted_format: _, flow_control: :auto
+    def_output_pad :output,
+      accepted_format: _any,
+      flow_control: :auto
 
     @impl true
     def handle_parent_notification(event, _context, state) do
@@ -90,5 +92,38 @@ defmodule Membrane.File.Integration.SourceTest do
 
     assert_sink_buffer(pipeline_pid, :sink, %Buffer{payload: "01234"})
     assert_end_of_stream(pipeline_pid, :sink)
+  end
+
+  @tmp_output "/tmp/output.txt"
+
+  @tag :mustexec
+  test "pipeline from :stdin to file works" do
+    assert {"", _rc = 0} =
+             System.cmd("bash", [
+               "-c",
+               "set -o pipefail; cat #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{@tmp_output}"
+             ])
+
+    assert "0123456789" == File.read!(@tmp_output)
+  end
+
+  @tag :mustexec
+  test "pipeline from file to :stdout works" do
+    assert {"0123456789", _rc = 0} =
+             System.cmd("bash", [
+               "-c",
+               "mix run test/fixtures/file_to_pipe.exs #{@input_text_file}"
+             ])
+  end
+
+  @tag :mustexec
+  test ":stdin/:stdout pipelines work in conjunction" do
+    assert {"", _rc = 0} =
+             System.cmd("bash", [
+               "-c",
+               "set -o pipefail; mix run test/fixtures/file_to_pipe.exs #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{@tmp_output}"
+             ])
+
+    assert "0123456789" == File.read!(@tmp_output)
   end
 end

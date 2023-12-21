@@ -15,11 +15,19 @@ defmodule Membrane.File.Sink do
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
   def_options location: [
-                spec: Path.t(),
-                description: "Path of the output file"
+                spec: Path.t() | :stdout,
+                description: "Path of the output file or :stdout"
               ]
 
   def_input_pad :input, flow_control: :manual, demand_unit: :buffers, accepted_format: _any
+
+  @impl true
+  def handle_init(_ctx, %__MODULE__{location: :stdout}) do
+    {[],
+     %{
+       location: :stdout
+     }}
+  end
 
   @impl true
   def handle_init(_ctx, %__MODULE__{location: location}) do
@@ -30,6 +38,11 @@ defmodule Membrane.File.Sink do
        fd: nil,
        temp_fd: nil
      }}
+  end
+
+  @impl true
+  def handle_setup(_ctx, %{location: :stdout} = state) do
+    {[], state}
   end
 
   @impl true
@@ -46,9 +59,20 @@ defmodule Membrane.File.Sink do
   end
 
   @impl true
+  def handle_buffer(:input, buffer, _ctx, %{location: :stdout} = state) do
+    :ok = @common_file.write!(:stdio, buffer)
+    {[demand: :input], state}
+  end
+
+  @impl true
   def handle_buffer(:input, buffer, _ctx, %{fd: fd} = state) do
     :ok = @common_file.write!(fd, buffer)
     {[demand: :input], state}
+  end
+
+  @impl true
+  def handle_event(:input, %SeekSinkEvent{}, _ctx, %{location: :stdout} = _state) do
+    raise "Seek event not supported for :stdout sink"
   end
 
   @impl true
@@ -64,8 +88,18 @@ defmodule Membrane.File.Sink do
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
+  def handle_end_of_stream(:input, _ctx, %{location: :stdout} = state) do
+    {[], state}
+  end
+
+  @impl true
   def handle_end_of_stream(:input, _ctx, state) do
     {[], do_merge_and_close(state)}
+  end
+
+  @impl true
+  def handle_terminate_request(_ctx, %{location: :stdout} = state) do
+    {[terminate: :normal], state}
   end
 
   @impl true
