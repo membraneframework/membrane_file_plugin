@@ -97,32 +97,47 @@ defmodule Membrane.File.Integration.SourceTest do
   @tmp_output "/tmp/output.txt"
 
   @tag :mustexec
+  # @tag timeout: :infinity
   test "pipeline from :stdin to file works" do
     assert {"", _rc = 0} =
-             System.cmd("bash", [
-               "-c",
-               "set -o pipefail; cat #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{@tmp_output}"
-             ])
+             System.cmd(
+               "bash",
+               [
+                 "-c",
+                 "set -o pipefail; cat #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{@tmp_output} 1024"
+               ],
+               env: [{"MIX_QUIET", "true"}]
+             )
 
     assert "0123456789" == File.read!(@tmp_output)
   end
 
   @tag :mustexec
+  # @tag timeout: :infinity
   test "pipeline from file to :stdout works" do
     assert {"0123456789", _rc = 0} =
-             System.cmd("bash", [
-               "-c",
-               "mix run test/fixtures/file_to_pipe.exs #{@input_text_file}"
-             ])
+             System.cmd(
+               "bash",
+               [
+                 "-c",
+                 "mix run test/fixtures/file_to_pipe.exs #{@input_text_file}"
+               ],
+               env: [{"MIX_QUIET", "true"}]
+             )
   end
 
   @tag :mustexec
+  # @tag timeout: :infinity
   test ":stdin/:stdout pipelines work in conjunction" do
     assert {"", _rc = 0} =
-             System.cmd("bash", [
-               "-c",
-               "set -o pipefail; mix run test/fixtures/file_to_pipe.exs #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{@tmp_output}"
-             ])
+             System.cmd(
+               "bash",
+               [
+                 "-c",
+                 "set -o pipefail; mix run test/fixtures/file_to_pipe.exs #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{@tmp_output} 1024"
+               ],
+               env: [{"MIX_QUIET", "true"}]
+             )
 
     assert "0123456789" == File.read!(@tmp_output)
   end
