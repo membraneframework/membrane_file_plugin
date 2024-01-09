@@ -27,7 +27,7 @@ defmodule Membrane.File.Integration.StdioTest do
                 set -o pipefail;                                                                       \
                 cat #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{cmd_out} 2048'     \
                 2> #{cmd_err}",
-               env: [{"MIX_QUIET", "true"}]
+               env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              )
 
     Logger.debug(File.read!(cmd_err))
@@ -42,7 +42,7 @@ defmodule Membrane.File.Integration.StdioTest do
                 set -o pipefail;                                                                       \
                 cat #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{cmd_out} 5'        \
                 2> #{cmd_err}",
-               env: [{"MIX_QUIET", "true"}]
+               env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              )
 
     Logger.debug(File.read!(cmd_err))
@@ -54,7 +54,7 @@ defmodule Membrane.File.Integration.StdioTest do
     assert {"0123456789", _rc = 0} ==
              System.shell("mix run test/fixtures/file_to_pipe.exs #{@input_text_file} \
                            2> #{cmd_err}",
-               env: [{"MIX_QUIET", "true"}]
+               env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              )
   end
 
@@ -67,7 +67,7 @@ defmodule Membrane.File.Integration.StdioTest do
                 mix run test/fixtures/file_to_pipe.exs #{@input_text_file}                             \
                 | mix run test/fixtures/pipe_to_file.exs #{cmd_out} 2048'                             \
                 2> #{cmd_err}",
-               env: [{"MIX_QUIET", "true"}]
+               env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              )
 
     Logger.debug(File.read!(cmd_err))
