@@ -21,6 +21,8 @@ defmodule Membrane.File.Integration.StdioTest do
 
   test "pipeline from :stdin to file works",
        %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
+    on_exit(fn -> Logger.debug(File.read!(cmd_err)) end)
+
     assert {"", _rc = 0} ==
              System.shell(
                "bash -c '                                                                              \
@@ -30,12 +32,13 @@ defmodule Membrane.File.Integration.StdioTest do
                env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              )
 
-    Logger.debug(File.read!(cmd_err))
     assert "0123456789" == File.read!(cmd_out)
   end
 
   test "pipeline from :stdin to file works when content is longer than chunk_size",
        %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
+    on_exit(fn -> Logger.debug(File.read!(cmd_err)) end)
+
     assert {"", _rc = 0} ==
              System.shell(
                "bash -c '                                                                              \
@@ -45,12 +48,13 @@ defmodule Membrane.File.Integration.StdioTest do
                env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              )
 
-    Logger.debug(File.read!(cmd_err))
     assert "0123456789" == File.read!(cmd_out)
   end
 
   test "pipeline from file to :stdout works",
        %{cmd_err: cmd_err} = _context do
+    on_exit(fn -> Logger.debug(File.read!(cmd_err)) end)
+
     assert {"0123456789", _rc = 0} ==
              System.shell("mix run test/fixtures/file_to_pipe.exs #{@input_text_file} \
                            2> #{cmd_err}",
@@ -60,6 +64,8 @@ defmodule Membrane.File.Integration.StdioTest do
 
   test ":stdin/:stdout pipelines work in conjunction",
        %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
+    on_exit(fn -> Logger.debug(File.read!(cmd_err)) end)
+
     assert {"", _rc = 0} ==
              System.shell(
                "bash -c '                                                                              \
@@ -70,7 +76,6 @@ defmodule Membrane.File.Integration.StdioTest do
                env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              )
 
-    Logger.debug(File.read!(cmd_err))
     assert "0123456789" == File.read!(cmd_out)
   end
 end
