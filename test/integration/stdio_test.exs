@@ -1,8 +1,9 @@
 defmodule Membrane.File.Integration.StdioTest do
   use ExUnit.Case, async: false
-  @moduletag timeout: 360_000
-
   require Logger
+
+  # 5min if dev env needs to compile
+  @moduletag timeout: 360_000
 
   @input_text_file "test/fixtures/input.txt"
   @cmd_out_prefix "/tmp/membrane_file_test_out"
@@ -64,6 +65,7 @@ defmodule Membrane.File.Integration.StdioTest do
 
   test ":stdin/:stdout pipelines work in conjunction",
        %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
+    # TODO: these don't log
     on_exit(fn -> Logger.debug(File.read!(cmd_err)) end)
 
     assert {"", _rc = 0} ==
