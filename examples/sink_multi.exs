@@ -35,7 +35,7 @@ defmodule Splitter do
       buffer: {:output, %Buffer{payload: tail}}
     ]
 
-    { actions, %{split?: false}}
+    {actions, %{split?: false}}
   end
 
   def handle_buffer(:input, buffer, _ctx, %{split?: false}) do
