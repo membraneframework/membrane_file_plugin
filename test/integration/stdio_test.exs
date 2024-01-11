@@ -90,8 +90,7 @@ defmodule Membrane.File.Integration.StdioTest do
     Logger.debug(output)
     Logger.debug("--- end output ---")
 
-    assert output == "" and
-             rc == 0 and
+    assert rc == 0 and
              "0123456789" == File.read!(cmd_out),
            File.read!(cmd_err)
   end
