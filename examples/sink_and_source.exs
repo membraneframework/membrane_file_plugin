@@ -13,10 +13,9 @@ defmodule FileExamplePipeline do
   @doc false
   @impl true
   def handle_init(_ctx, target) do
-    spec = [
+    spec =
       child(:file_src, %Membrane.File.Source{location: __ENV__.file})
       |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/test"})
-    ]
 
     {[spec: spec], %{target: target}}
   end
