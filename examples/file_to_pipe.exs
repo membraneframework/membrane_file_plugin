@@ -2,6 +2,8 @@ import Membrane.ChildrenSpec
 import Membrane.Testing.Assertions
 alias Membrane.Testing.Pipeline
 
+# redirect membrane logs to stderr
+# currently also requires 'configure: :logger, backends: []' line in config.exs
 LoggerBackends.add(LoggerBackends.Console)
 LoggerBackends.configure(LoggerBackends.Console, device: :standard_error)
 

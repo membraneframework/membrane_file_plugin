@@ -1,6 +1,11 @@
 defmodule Membrane.File.Sink do
   @moduledoc """
   Element that creates a file and stores incoming buffers there (in binary format).
+  Can also be used as a pipe to standard output by setting location to :stdout,
+  though this requires additional configuration.
+
+  Pipeline logs are directed to standard output by default. To separate them from the sink's output
+  we reccomend redirecting the logger to standard error. See 'examples/file_to_pipe.exs'
 
   When `Membrane.File.SeekSinkEvent` is received, the element starts writing buffers starting
   from `position`. By default, it overwrites previously stored bytes. You can set `insert?`
