@@ -7,6 +7,8 @@ defmodule Membrane.File.Integration.StdioTest do
   @moduletag :tmp_dir
 
   @input_text_file "test/fixtures/input.txt"
+  @file_to_pipe "examples/file_to_pipe.exs"
+  @pipe_to_file "examples/pipe_to_file.exs"
 
   setup_all(_context) do
     assert Mix.Task.run("compile", ["test/fixtures/*.exs"]) in [:ok, :noop]
@@ -27,13 +29,15 @@ defmodule Membrane.File.Integration.StdioTest do
       System.shell(
         "bash -c '                                                                                   \
                 set -o pipefail;                                                                     \
-                cat #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{cmd_out} 2048'    \
+                cat #{@input_text_file} | mix run test/fixtures/#{@pipe_to_file} #{cmd_out} 2048'    \
                 2> #{cmd_err}",
         # MIX_ENV set explicitly to dev so that file_behaviour is not mocked
         env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
       )
 
-    Logger.debug("output when running script:\n#{output}\nendoutput")
+    Logger.debug("output when running script:")
+    Logger.debug(output)
+    Logger.debug("--- end output ---")
 
     assert output == "" and
              rc == 0 and
@@ -47,10 +51,14 @@ defmodule Membrane.File.Integration.StdioTest do
       System.shell(
         "bash -c '                                                                                   \
                 set -o pipefail;                                                                     \
-                cat #{@input_text_file} | mix run test/fixtures/pipe_to_file.exs #{cmd_out} 5'       \
+                cat #{@input_text_file} | mix run test/fixtures/#{@pipe_to_file} #{cmd_out} 5'       \
                 2> #{cmd_err}",
         env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
       )
+
+    Logger.debug("output when running script:")
+    Logger.debug(output)
+    Logger.debug("--- end output ---")
 
     assert output == "" and
              rc == 0 and
@@ -61,7 +69,7 @@ defmodule Membrane.File.Integration.StdioTest do
   test "pipeline from file to :stdout works",
        %{cmd_err: cmd_err} = _context do
     assert {"0123456789", _rc = 0} ==
-             System.shell("mix run test/fixtures/file_to_pipe.exs #{@input_text_file} \
+             System.shell("mix run test/fixtures/#{@file_to_pipe} #{@input_text_file} \
                            2> #{cmd_err}",
                env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
              ),
@@ -74,11 +82,15 @@ defmodule Membrane.File.Integration.StdioTest do
       System.shell(
         "bash -c '                                                                                   \
                 set -o pipefail;                                                                     \
-                mix run test/fixtures/file_to_pipe.exs #{@input_text_file}                           \
-                | mix run test/fixtures/pipe_to_file.exs #{cmd_out} 2048'                            \
+                mix run test/fixtures/#{@file_to_pipe} #{@input_text_file}                           \
+                | mix run test/fixtures/#{pipe_to_file} #{cmd_out} 2048'                            \
                 2> #{cmd_err}",
         env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
       )
+
+    Logger.debug("output when running script:")
+    Logger.debug(output)
+    Logger.debug("--- end output ---")
 
     assert output == "" and
              rc == 0 and

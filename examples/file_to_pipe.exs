@@ -5,13 +5,11 @@ alias Membrane.Testing.Pipeline
 LoggerBackends.add(LoggerBackends.Console)
 LoggerBackends.configure(LoggerBackends.Console, device: :standard_error)
 
-[output, chunk_size_str | _] = System.argv()
-{chunk_size, ""} = Integer.parse(chunk_size_str)
+[input | _] = System.argv()
 
-spec = [
-  child(%Membrane.File.Source{location: :stdin, chunk_size: chunk_size})
-  |> child(:sink, %Membrane.File.Sink{location: output})
-]
+spec =
+  child(%Membrane.File.Source{location: input})
+  |> child(:sink, %Membrane.File.Sink{location: :stdout})
 
 {:ok, _supervisor, pipeline} = Pipeline.start(spec: spec)
 
