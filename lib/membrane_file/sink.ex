@@ -26,6 +26,18 @@ defmodule Membrane.File.Sink do
 
   def_input_pad :input, flow_control: :manual, demand_unit: :buffers, accepted_format: _any
 
+  def redirect_logs() do
+    {:ok, config} = :logger.get_handler_config(:default)
+    :ok = :logger.remove_handler(:default)
+
+    :ok =
+      :logger.add_handler(
+        :default,
+        :logger_std_h,
+        put_in(config, [:config, :type], :standard_error)
+      )
+  end
+
   @impl true
   def handle_init(_ctx, %__MODULE__{location: :stdout}) do
     {[],
