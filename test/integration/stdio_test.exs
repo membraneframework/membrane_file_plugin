@@ -27,12 +27,13 @@ defmodule Membrane.File.Integration.StdioTest do
        %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
     {output, rc} =
       System.shell(
-        "bash -c '                                                                                   \
-                set -o pipefail;                                                                     \
-                cat #{@input_text_file} | mix run #{@pipe_to_file} #{cmd_out} 2048'    \
-                2> #{cmd_err}",
-        # MIX_ENV set explicitly to dev so that file_behaviour is not mocked
-        env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
+        """
+        bash -c '
+              set -o pipefail;
+              cat #{@input_text_file} | elixir #{@pipe_to_file} #{cmd_out} 2048'
+              2> #{cmd_err}
+        """
+        |> String.replace("\n", "")
       )
 
     Logger.debug("output when running script:")
@@ -48,11 +49,13 @@ defmodule Membrane.File.Integration.StdioTest do
        %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
     {output, rc} =
       System.shell(
-        "bash -c '                                                                                   \
-                set -o pipefail;                                                                     \
-                cat #{@input_text_file} | mix run #{@pipe_to_file} #{cmd_out} 5'       \
-                2> #{cmd_err}",
-        env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
+        """
+        bash -c '
+              set -o pipefail;
+              cat #{@input_text_file} | elixir #{@pipe_to_file} #{cmd_out} 5'
+              2> #{cmd_err}
+        """
+        |> String.replace("\n", "")
       )
 
     Logger.debug("output when running script:")
@@ -67,10 +70,7 @@ defmodule Membrane.File.Integration.StdioTest do
   test "pipeline from file to :stdout works",
        %{cmd_err: cmd_err} = _context do
     assert {"0123456789", _rc = 0} ==
-             System.shell("mix run #{@file_to_pipe} #{@input_text_file} \
-                           2> #{cmd_err}",
-               env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
-             ),
+             System.shell("elixir #{@file_to_pipe} #{@input_text_file} 2> #{cmd_err}"),
            File.read!(cmd_err)
   end
 
@@ -78,12 +78,14 @@ defmodule Membrane.File.Integration.StdioTest do
        %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
     {output, rc} =
       System.shell(
-        "bash -c '                                                                                   \
-                set -o pipefail;                                                                     \
-                mix run #{@file_to_pipe} #{@input_text_file}                           \
-                | mix run #{@pipe_to_file} #{cmd_out} 2048'                            \
-                2> #{cmd_err}",
-        env: [{"MIX_QUIET", "true"}, {"MIX_ENV", "dev"}]
+        """
+        bash -c '
+                set -o pipefail;
+                elixir #{@file_to_pipe} #{@input_text_file}
+                | elixir #{@pipe_to_file} #{cmd_out} 2048'
+                2> #{cmd_err}
+        """
+        |> String.replace("\n", "")
       )
 
     Logger.debug("output when running script:")

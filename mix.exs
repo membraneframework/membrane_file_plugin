@@ -27,19 +27,12 @@ defmodule Membrane.File.Plugin.Mixfile do
     ]
   end
 
-  def application do
-    [
-      extra_applications: []
-    ]
-  end
-
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_env), do: ["lib"]
 
   defp deps do
     [
       {:membrane_core, "~> 1.0"},
-      {:logger_backends, "~> 1.0"},
       # Testing
       {:mox, "~> 1.0", only: :test},
       # Development
