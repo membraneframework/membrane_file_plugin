@@ -1,54 +1,13 @@
-# defmodule Mix.Shell.Ultraquiet do
-#   @behaviour Mix.Shell
-
-#   def print_app, do: :ok
-
-#   def error(_message), do: :ok
-
-#   def info(_message), do: :ok
-
-#   def print_app(_message), do: :ok
-
-#   def prompt(_message), do: :ok
-
-#   def yes?(_message, _opts \\ []), do: :ok
-
-#   def cmd(command, opts \\ []) do
-#     Mix.Shell.cmd(command, opts, fn data -> data end)
-#   end
-# end
-
-# {:ok, config} = :logger.get_handler_config(:default)
-# config_dev = put_in(config, [:config, :type], :standard_error)
-
-# :ok =
-#   :logger.set_handler_config(:default, put_in(config, [:config, :type], :standard_error))
-
-# :logger.remove_handler(:default)
-# :ok =
-#   :logger.add_handler(:default, :logger_std_h, put_in(config, [:config, :type], :standard_error))
-
-# Logger.configure(device: :standard_error)
-# Logger.Backends.Internal.configure(device: :standard_error)
-
 Mix.start()
 Mix.shell(Mix.Shell.Quiet)
+# if Mix pollutes the logs, consider redirecting its logs by overriding the
+# [Mix.Shell](https://hexdocs.pm/mix/Mix.Shell.html) behaviour
 
-Mix.install(
-  [
-    {:membrane_file_plugin, path: "."}
-  ]
-  # force: true
-)
+Mix.install([{:membrane_file_plugin, path: "."}])
 
 defmodule FileExamplePipeline do
-  @doc """
-  Example pipeline that reads its source code file and outputs it to /tmp/test.
-  """
-
   use Membrane.Pipeline
 
-  @doc false
   @impl true
   def handle_init(_ctx, %{target: target, input: input}) do
     spec =

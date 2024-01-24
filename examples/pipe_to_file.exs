@@ -1,24 +1,14 @@
 Mix.start()
 Mix.shell(Mix.Shell.Quiet)
 
-Mix.install(
-  [
-    {:membrane_file_plugin, path: "."}
-  ]
-  # force: true
-)
+Mix.install([{:membrane_file_plugin, path: "."}])
 
 [output, chunk_size_str | _] = System.argv()
 {chunk_size, ""} = Integer.parse(chunk_size_str)
 
 defmodule PipeToFile do
-  @doc """
-  Example pipeline that reads its source code file and outputs it to /tmp/test.
-  """
-
   use Membrane.Pipeline
 
-  @doc false
   @impl true
   def handle_init(_ctx, %{target: target, output: output, chunk_size: chunk_size}) do
     spec =
