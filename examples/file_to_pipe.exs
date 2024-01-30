@@ -24,8 +24,7 @@ defmodule FileExamplePipeline do
   end
 end
 
-# # redirect membrane logs to stderr
-Membrane.File.Sink.redirect_logs()
+Membrane.File.Sink.redirect_logs_to_stderr()
 
 [input] = System.argv()
 

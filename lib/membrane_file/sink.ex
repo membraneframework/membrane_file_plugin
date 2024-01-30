@@ -12,7 +12,7 @@ defmodule Membrane.File.Sink do
 
   Pipeline logs are directed to standard output by default. To separate them from the sink's output
   we recommend redirecting the logger to standard error. For simple use cases using the default logger
-  configuration (like stand-alone scripts) this can be achieved by simply calling redirect_logs/1.
+  configuration (like stand-alone scripts) this can be achieved by simply calling redirect_logs_to_stderr/0.
   See examples/file_to_pipe.exs for a working example.
   """
   use Membrane.Sink
@@ -28,7 +28,7 @@ defmodule Membrane.File.Sink do
 
   def_input_pad :input, flow_control: :manual, demand_unit: :buffers, accepted_format: _any
 
-  @spec redirect_logs() :: :ok
+  @spec redirect_logs_to_stderr() :: :ok
   def redirect_logs_to_stderr() do
     {:ok, config} = :logger.get_handler_config(:default)
     :ok = :logger.remove_handler(:default)
