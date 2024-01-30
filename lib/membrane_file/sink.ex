@@ -29,7 +29,7 @@ defmodule Membrane.File.Sink do
   def_input_pad :input, flow_control: :manual, demand_unit: :buffers, accepted_format: _any
 
   @spec redirect_logs() :: :ok
-  def redirect_logs() do
+  def redirect_logs_to_stderr() do
     {:ok, config} = :logger.get_handler_config(:default)
     :ok = :logger.remove_handler(:default)
 
