@@ -30,15 +30,9 @@ defmodule Membrane.File.Sink do
 
   @spec redirect_logs_to_stderr() :: :ok
   def redirect_logs_to_stderr() do
-    {:ok, config} = :logger.get_handler_config(:default)
     :ok = :logger.remove_handler(:default)
-
-    :ok =
-      :logger.add_handler(
-        :default,
-        :logger_std_h,
-        put_in(config, [:config, :type], :standard_error)
-      )
+    LoggerBackends.add(LoggerBackends.Console)
+    LoggerBackends.configure(LoggerBackends.Console, device: :standard_error)
   end
 
   @impl true
