@@ -14,10 +14,12 @@ defmodule Membrane.File.Integration.SourceTest do
     use Membrane.Filter
 
     def_input_pad :input,
-      accepted_format: _,
+      accepted_format: _any,
       flow_control: :auto
 
-    def_output_pad :output, accepted_format: _, flow_control: :auto
+    def_output_pad :output,
+      accepted_format: _any,
+      flow_control: :auto
 
     @impl true
     def handle_parent_notification(event, _context, state) do

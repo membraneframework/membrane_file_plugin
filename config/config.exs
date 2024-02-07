@@ -1,5 +1,7 @@
 import Config
 
+config :logger, backends: []
+
 if config_env() == :test do
   config :membrane_file_plugin, :file_impl, Membrane.File.CommonMock
 else

@@ -1,12 +1,19 @@
 defmodule Membrane.File.Sink do
   @moduledoc """
   Element that creates a file and stores incoming buffers there (in binary format).
+  Can also be used as a pipe to standard output by setting location to :stdout,
+  though this requires additional configuration.
 
   When `Membrane.File.SeekSinkEvent` is received, the element starts writing buffers starting
   from `position`. By default, it overwrites previously stored bytes. You can set `insert?`
   field of the event to `true` to start inserting new buffers without overwriting previous ones.
   Please note, that inserting requires rewriting the file, what negatively impacts performance.
   For more information refer to `Membrane.File.SeekSinkEvent` moduledoc.
+
+  Pipeline logs are directed to standard output by default. To separate them from the sink's output
+  we recommend redirecting the logger to standard error. For simple use cases using the default logger
+  configuration (like stand-alone scripts) this can be achieved by simply calling redirect_logs_to_stderr/0.
+  See examples/file_to_pipe.exs for a working example.
   """
   use Membrane.Sink
 
@@ -15,11 +22,26 @@ defmodule Membrane.File.Sink do
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
   def_options location: [
-                spec: Path.t(),
-                description: "Path of the output file"
+                spec: Path.t() | :stdout,
+                description: "Path of the output file or :stdout"
               ]
 
   def_input_pad :input, flow_control: :manual, demand_unit: :buffers, accepted_format: _any
+
+  @spec redirect_logs_to_stderr() :: :ok
+  def redirect_logs_to_stderr() do
+    :ok = :logger.remove_handler(:default)
+    LoggerBackends.add(LoggerBackends.Console)
+    LoggerBackends.configure(LoggerBackends.Console, device: :standard_error)
+  end
+
+  @impl true
+  def handle_init(_ctx, %__MODULE__{location: :stdout}) do
+    {[],
+     %{
+       location: :stdout
+     }}
+  end
 
   @impl true
   def handle_init(_ctx, %__MODULE__{location: location}) do
@@ -30,6 +52,11 @@ defmodule Membrane.File.Sink do
        fd: nil,
        temp_fd: nil
      }}
+  end
+
+  @impl true
+  def handle_setup(_ctx, %{location: :stdout} = state) do
+    {[], state}
   end
 
   @impl true
@@ -46,9 +73,20 @@ defmodule Membrane.File.Sink do
   end
 
   @impl true
+  def handle_buffer(:input, buffer, _ctx, %{location: :stdout} = state) do
+    :ok = @common_file.write!(:stdio, buffer)
+    {[demand: :input], state}
+  end
+
+  @impl true
   def handle_buffer(:input, buffer, _ctx, %{fd: fd} = state) do
     :ok = @common_file.write!(fd, buffer)
     {[demand: :input], state}
+  end
+
+  @impl true
+  def handle_event(:input, %SeekSinkEvent{}, _ctx, %{location: :stdout} = _state) do
+    raise "Seek event not supported for :stdout sink"
   end
 
   @impl true
@@ -64,8 +102,18 @@ defmodule Membrane.File.Sink do
   def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
 
   @impl true
+  def handle_end_of_stream(:input, _ctx, %{location: :stdout} = state) do
+    {[], state}
+  end
+
+  @impl true
   def handle_end_of_stream(:input, _ctx, state) do
     {[], do_merge_and_close(state)}
+  end
+
+  @impl true
+  def handle_terminate_request(_ctx, %{location: :stdout} = state) do
+    {[terminate: :normal], state}
   end
 
   @impl true
