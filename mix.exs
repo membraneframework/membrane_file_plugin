@@ -78,39 +78,3 @@ defmodule Membrane.File.Plugin.Mixfile do
     ]
   end
 end
-
-# Also, a small bug noticed when reproducing on elixir 1.16.0, this time related to mix:
-# ```elixir
-# require Logger
-
-# Mix.start()
-# Mix.shell(Mix.Shell.Quiet)
-
-# Mix.install(
-#   [
-#     :ratio,
-#     :logger_backends
-#   ],
-#   force: true
-# )
-# ```
-# ```command
-# root@5da670a83b2e:/workspace/membrane/logger_mre# elixirc mre.exs 2> stderr.log
-# ==> ratio
-# ```
-# stderr.log:
-# ```log
-# Every 2.0s: cat stderr.log                                                       5da670a83b2e: Tue Jan 30 12:35:47 2024
-
-#     warning: Ratio.DecimalConversion.decimal_to_rational/1 is undefined (module Ratio.DecimalConversion is not availabl
-# e or is yet to be defined)
-#     │
-#  17 │     {ratio, Ratio.DecimalConversion.decimal_to_rational(decimal)}
-#     │                                     ~
-#     │
-#     └─ lib/ratio/coerce.ex:17:37: Coerce.Implementations.Ratio.Decimal.coerce/2
-
-# both :extra_applications and :applications was found in your mix.exs. You most likely want to remove the :applications
-# key, as all applications are derived from your dependencies
-# ```
-# It looks like a part of the message is logged to stderr, and the last line to stdout, which, again, was a hindrance for our use case.

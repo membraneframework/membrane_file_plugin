@@ -1,10 +1,14 @@
+# This script reads from stdin until EOS, writing the contents to a file specified by the first argument
+# The second argument is chunk size, specifying how many bytes to consume from stdin at once.
+# The script can be run like this: `echo hello | elixir examples/pipe_to_file.exs /tmp/test 2048`, resulting in 'hello' being written to /tmp/test
+#
+# if Mix pollutes the logs, consider redirecting its logs by overriding the
+# [Mix.Shell](https://hexdocs.pm/mix/Mix.Shell.html) behaviour
+
 Mix.start()
 Mix.shell(Mix.Shell.Quiet)
 
-Mix.install([{:membrane_file_plugin, path: "."}])
-
-[output, chunk_size_str | _] = System.argv()
-{chunk_size, ""} = Integer.parse(chunk_size_str)
+Mix.install([{:membrane_file_plugin, path: __DIR__ <> "/.."}])
 
 defmodule PipeToFile do
   use Membrane.Pipeline
@@ -25,10 +29,13 @@ defmodule PipeToFile do
   end
 end
 
+[output_file, chunk_size_str] = System.argv()
+{chunk_size, ""} = Integer.parse(chunk_size_str)
+
 {:ok, _supervisor, pid} =
   Membrane.Pipeline.start_link(PipeToFile, %{
     target: self(),
-    output: output,
+    output: output_file,
     chunk_size: chunk_size
   })
 
