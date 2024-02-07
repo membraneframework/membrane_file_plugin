@@ -7,7 +7,7 @@
 Mix.start()
 Mix.shell(Mix.Shell.Quiet)
 
-Mix.install([{:membrane_file_plugin, path: __DIR__ <> "/.."}])
+Mix.install([{:membrane_file_plugin, path: "."}])
 
 defmodule FileExamplePipeline do
   use Membrane.Pipeline
