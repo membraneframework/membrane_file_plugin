@@ -5,33 +5,24 @@ defmodule Membrane.File.Integration.StdioTest do
   # 5min if dev env needs to compile
   @moduletag timeout: 360_000
   @moduletag :tmp_dir
+  @moduletag :long_running
 
   @input_text_file "test/fixtures/input.txt"
   @file_to_pipe "examples/file_to_pipe.exs"
   @pipe_to_file "examples/pipe_to_file.exs"
 
-  setup_all(_context) do
-    assert Mix.Task.run("compile", [@file_to_pipe, @pipe_to_file]) in [:ok, :noop]
-    :ok
-  end
-
-  setup(%{tmp_dir: tmp_dir} = _context) do
-    cmd_out_file = Path.join(tmp_dir, "out.txt")
-    Logger.debug("cmd_out_file=#{cmd_out_file}")
-    cmd_err_file = Path.join(tmp_dir, "err.txt")
-    Logger.debug("cmd_err_file=#{cmd_err_file}")
-    {:ok, %{cmd_out: cmd_out_file, cmd_err: cmd_err_file}}
-  end
-
   test "pipeline from :stdin to file works",
-       %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
+       %{tmp_dir: tmp_dir} = _context do
+    cmd_out = Path.join([tmp_dir, "out.txt"])
+    pipeline_err = Path.join([tmp_dir, "err.txt"])
+
     {output, rc} =
       System.shell(
         """
         bash -c '
               set -o pipefail;
               cat #{@input_text_file} | elixir #{@pipe_to_file} #{cmd_out} 2048'
-              2> #{cmd_err}
+              2> #{pipeline_err}
         """
         |> String.replace("\n", "")
       )
@@ -42,18 +33,24 @@ defmodule Membrane.File.Integration.StdioTest do
 
     assert rc == 0 and
              "0123456789" == File.read!(cmd_out),
-           File.read!(cmd_err)
+           """
+           Outputs did not match, see pipeline's stderr:
+           #{pipeline_err}
+           """
   end
 
   test "pipeline from :stdin to file works when content is longer than chunk_size",
-       %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
+       %{tmp_dir: tmp_dir} = _context do
+    cmd_out = Path.join([tmp_dir, "out.txt"])
+    pipeline_err = Path.join([tmp_dir, "err.txt"])
+
     {output, rc} =
       System.shell(
         """
         bash -c '
               set -o pipefail;
               cat #{@input_text_file} | elixir #{@pipe_to_file} #{cmd_out} 5'
-              2> #{cmd_err}
+              2> #{pipeline_err}
         """
         |> String.replace("\n", "")
       )
@@ -64,26 +61,37 @@ defmodule Membrane.File.Integration.StdioTest do
 
     assert rc == 0 and
              "0123456789" == File.read!(cmd_out),
-           File.read!(cmd_err)
+           """
+           Outputs did not match, see pipeline's stderr:
+           #{pipeline_err}
+           """
   end
 
   test "pipeline from file to :stdout works",
-       %{cmd_err: cmd_err} = _context do
+       %{tmp_dir: tmp_dir} = _context do
+    pipeline_err = Path.join([tmp_dir, "err.txt"])
+
     assert {"0123456789", _rc = 0} ==
-             System.shell("elixir #{@file_to_pipe} #{@input_text_file} 2> #{cmd_err}"),
-           File.read!(cmd_err)
+             System.shell("elixir #{@file_to_pipe} #{@input_text_file} 2> #{pipeline_err}"),
+           """
+           Outputs did not match, see pipeline's stderr:
+           #{pipeline_err}
+           """
   end
 
-  test "file to stdout to stdin to file works",
-       %{cmd_out: cmd_out, cmd_err: cmd_err} = _context do
+  test "file to :stdout to :stdin to file works",
+       %{tmp_dir: tmp_dir} = _context do
+    cmd_out = Path.join([tmp_dir, "out.txt"])
+    pipeline1_err = Path.join([tmp_dir, "err1.txt"])
+    pipeline2_err = Path.join([tmp_dir, "err2.txt"])
+
     {output, rc} =
       System.shell(
         """
         bash -c '
                 set -o pipefail;
-                elixir #{@file_to_pipe} #{@input_text_file}
-                | elixir #{@pipe_to_file} #{cmd_out} 2048'
-                2> #{cmd_err}
+                elixir #{@file_to_pipe} #{@input_text_file} 2> #{pipeline1_err}
+              | elixir #{@pipe_to_file} #{cmd_out} 2048'    2> #{pipeline2_err}
         """
         |> String.replace("\n", "")
       )
@@ -94,6 +102,10 @@ defmodule Membrane.File.Integration.StdioTest do
 
     assert rc == 0 and
              "0123456789" == File.read!(cmd_out),
-           File.read!(cmd_err)
+           """
+           Outputs did not match, see pipelines' stderr:
+           #{pipeline1_err}
+           #{pipeline2_err}
+           """
   end
 end
