@@ -8,7 +8,8 @@
 Mix.start()
 Mix.shell(Mix.Shell.Quiet)
 
-Mix.install([{:membrane_file_plugin, path: "."}])
+# setting different system_env is currently a workaround to make sure scripts do not share mix install dirs
+Mix.install([{:membrane_file_plugin, path: "."}], system_env: [{"PID", :os.getpid()}])
 
 defmodule PipeToFile do
   use Membrane.Pipeline
