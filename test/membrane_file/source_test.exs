@@ -103,7 +103,7 @@ defmodule Membrane.File.SourceTest do
           state
         )
 
-      assert {[], state} ==
+      assert {[{:event, {:output, %Membrane.File.EndOfSeekEvent{}}}], state} ==
                @module.handle_demand(:output, 5, :bytes, ctx, state)
     end
   end
