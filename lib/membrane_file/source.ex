@@ -10,8 +10,7 @@ defmodule Membrane.File.Source do
   use Membrane.Source
 
   alias Membrane.{Buffer, RemoteStream}
-  alias Membrane.File.NewSeekEvent
-  alias Membrane.File.SeekSourceEvent
+  alias Membrane.File.{EndOfSeekEvent, NewSeekEvent, SeekSourceEvent}
 
   @common_file Membrane.File.CommonFileBehaviour.get_impl()
 
@@ -185,8 +184,10 @@ defmodule Membrane.File.Source do
     actions =
       buffer_actions ++
         cond do
-          state.should_send_eos? and (state.size_to_read == 0 or supplied_size < to_supply_size) ->
-            [end_of_stream: :output]
+          state.size_to_read == 0 or supplied_size < to_supply_size ->
+            end_of_seek = if state.seekable?, do: [event: {:output, %EndOfSeekEvent{}}], else: []
+            eos = if state.should_send_eos?, do: [end_of_stream: :output], else: []
+            end_of_seek ++ eos
 
           to_supply_size == supplied_size ->
             redemand
