@@ -1,7 +1,7 @@
 defmodule Membrane.File.Plugin.Mixfile do
   use Mix.Project
 
-  @version "0.17.1"
+  @version "0.17.2"
 
   @github_url "https://github.com/membraneframework/membrane_file_plugin"
 

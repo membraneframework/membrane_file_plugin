@@ -110,6 +110,11 @@ defmodule Membrane.File.Source do
   end
 
   @impl true
+  def handle_event(:output, _event, _ctx, state) do
+    {[], state}
+  end
+
+  @impl true
   def handle_demand(:output, _size, :buffers, _ctx, %{chunk_size: chunk_size} = state),
     do: supply_demand(chunk_size, [redemand: :output], state)
 
