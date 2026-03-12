@@ -55,7 +55,8 @@ defmodule Membrane.File.Source do
   end
 
   @impl true
-  def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size, seekable?: seekable?}) do
+  def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size, seekable?: seekable?})
+      when is_binary(location) do
     size_to_read = if seekable?, do: 0, else: :infinity
 
     {[],
@@ -67,6 +68,11 @@ defmodule Membrane.File.Source do
        size_to_read: size_to_read,
        seekable?: seekable?
      }}
+  end
+
+  @impl true
+  def handle_init(_ctx, %__MODULE__{location: location}) do
+    raise "Provided location #{inspect(location)} not of type `Path.t() | :stdin`"
   end
 
   @impl true

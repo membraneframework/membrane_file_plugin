@@ -78,7 +78,7 @@ defmodule Membrane.File.Sink.Multi do
 
   @impl true
   def handle_buffer(:input, buffer, _ctx, %{fd: fd} = state) do
-    :ok = @common_file.write!(fd, buffer)
+    :ok = @common_file.write(fd, buffer)
     {[demand: :input], state}
   end
 
