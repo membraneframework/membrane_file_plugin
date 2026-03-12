@@ -23,12 +23,7 @@ defmodule Membrane.File.CommonFile do
   def write(fd, %Buffer{payload: payload}), do: IO.binwrite(fd, Payload.to_binary(payload))
 
   @impl true
-  def write!(fd, buffer) do
-    case write(fd, buffer) do
-      :ok -> :ok
-      {:error, error} -> raise "Failed to write to a file #{inspect(fd)}: #{inspect(error)}"
-    end
-  end
+  def write!(fd, buffer), do: write(fd, buffer)
 
   @impl true
   def seek(fd, position), do: :file.position(fd, position)
