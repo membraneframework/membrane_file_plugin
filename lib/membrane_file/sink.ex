@@ -44,7 +44,7 @@ defmodule Membrane.File.Sink do
   end
 
   @impl true
-  def handle_init(_ctx, %__MODULE__{location: location}) do
+  def handle_init(_ctx, %__MODULE__{location: location}) when is_binary(location) do
     {[],
      %{
        location: Path.expand(location),
@@ -52,6 +52,11 @@ defmodule Membrane.File.Sink do
        fd: nil,
        temp_fd: nil
      }}
+  end
+
+  @impl true
+  def handle_init(_ctx, %__MODULE__{location: location}) do
+    raise "Provided location #{inspect(location)} not of type `Path.t() | :stdout`"
   end
 
   @impl true
