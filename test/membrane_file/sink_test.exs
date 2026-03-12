@@ -31,7 +31,7 @@ defmodule Membrane.File.SinkTest do
       %{fd: file} = state
       buffer = %Buffer{payload: <<1, 2, 3>>}
 
-      CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
+      CommonMock |> expect(:write, fn ^file, ^buffer -> :ok end)
 
       assert {[demand: :input], _state} = @module.handle_buffer(:input, buffer, ctx, state)
     end
@@ -76,7 +76,7 @@ defmodule Membrane.File.SinkTest do
       state = %{state | temp_fd: :temporary}
       buffer = %Buffer{payload: <<1, 2, 3>>}
 
-      CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
+      CommonMock |> expect(:write, fn ^file, ^buffer -> :ok end)
 
       assert {[demand: :input], %{fd: ^file, temp_fd: :temporary}} =
                @module.handle_buffer(:input, buffer, ctx, state)

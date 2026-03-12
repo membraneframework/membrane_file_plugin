@@ -20,8 +20,7 @@ defmodule Membrane.File.CommonFileBehaviour do
               {:ok, File.io_device()} | posix_error_t()
   @callback open!(Path.t(), File.mode() | [File.mode() | :ram]) :: File.io_device()
 
-  @callback write(File.io_device(), Buffer.t()) :: :ok | posix_error_t()
-  @callback write!(File.io_device(), Buffer.t()) :: :ok
+  @callback write(File.io_device(), Buffer.t()) :: :ok
 
   @callback seek(File.io_device(), SeekSinkEvent.position_t()) ::
               {:ok, integer()} | generic_error_t()

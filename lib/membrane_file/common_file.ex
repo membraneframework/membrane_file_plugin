@@ -23,9 +23,6 @@ defmodule Membrane.File.CommonFile do
   def write(fd, %Buffer{payload: payload}), do: IO.binwrite(fd, Payload.to_binary(payload))
 
   @impl true
-  def write!(fd, buffer), do: write(fd, buffer)
-
-  @impl true
   def seek(fd, position), do: :file.position(fd, position)
 
   @impl true

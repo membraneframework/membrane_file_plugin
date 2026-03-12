@@ -28,7 +28,7 @@ defmodule Membrane.File.Sink.MultiTest do
       %{fd: file} = state
       buffer = %Buffer{payload: <<1, 2, 3>>}
 
-      CommonMock |> expect(:write!, fn ^file, ^buffer -> :ok end)
+      CommonMock |> expect(:write, fn ^file, ^buffer -> :ok end)
 
       assert {[demand: :input], state} ==
                @module.handle_buffer(:input, buffer, nil, state)
