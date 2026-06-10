@@ -1,6 +1,6 @@
 import Config
 
-config :logger, backends: []
+config :logger, :default_handler, false
 
 if config_env() == :test do
   config :membrane_file_plugin, :file_impl, Membrane.File.CommonMock
