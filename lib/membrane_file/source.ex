@@ -34,39 +34,49 @@ defmodule Membrane.File.Source do
                 The source working in `seekable?: true` mode won't send any data before that event is received.
                 For more information about how to steer reading in `seekable?: true` mode, see: `Membrane.File.SeekSourceEvent`.
                 """
+              ],
+              content_format: [
+                spec: module() | nil,
+                default: nil,
+                description: """
+                Value from this option will be inserted into the `:content_format` field of emitted `Membrane.RemoteStream` 
+                stream format. 
+                """
               ]
 
   def_output_pad :output, accepted_format: %RemoteStream{type: :bytestream}, flow_control: :manual
 
   @impl true
-  def handle_init(_ctx, %__MODULE__{location: :stdin, chunk_size: size, seekable?: seekable?}) do
-    if seekable? do
+  def handle_init(_ctx, %__MODULE__{location: :stdin} = opts) do
+    if opts.seekable? do
       raise "Cannot seek when reading from :stdin"
     else
       {[],
        %{
          location: :stdin,
-         chunk_size: size,
+         chunk_size: opts.chunk_size,
          should_send_eos: true,
          size_to_read: :infinity,
-         seekable?: false
+         seekable?: false,
+         content_format: opts.content_format
        }}
     end
   end
 
   @impl true
-  def handle_init(_ctx, %__MODULE__{location: location, chunk_size: size, seekable?: seekable?})
+  def handle_init(_ctx, %__MODULE__{location: location} = opts)
       when is_binary(location) do
-    size_to_read = if seekable?, do: 0, else: :infinity
+    size_to_read = if opts.seekable?, do: 0, else: :infinity
 
     {[],
      %{
        location: Path.expand(location),
-       chunk_size: size,
+       chunk_size: opts.chunk_size,
        fd: nil,
-       should_send_eos?: not seekable?,
+       should_send_eos?: not opts.seekable?,
        size_to_read: size_to_read,
-       seekable?: seekable?
+       seekable?: opts.seekable?,
+       content_format: opts.content_format
      }}
   end
 
@@ -89,7 +99,10 @@ defmodule Membrane.File.Source do
 
   @impl true
   def handle_playing(_ctx, state) do
-    {[stream_format: {:output, %RemoteStream{type: :bytestream}}], state}
+    {[
+       stream_format:
+         {:output, %RemoteStream{type: :bytestream, content_format: state.content_format}}
+     ], state}
   end
 
   @impl true

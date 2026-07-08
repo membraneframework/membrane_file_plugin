@@ -120,7 +120,7 @@ defmodule Membrane.File.SinkSourceIntegrationTest do
 
     @impl true
     def handle_buffer(:input, buffer, _ctx, %{head_size: head_size, split?: true}) do
-      <<head::binary-size(head_size), tail::binary>> = buffer.payload
+      <<head::binary-size(^head_size), tail::binary>> = buffer.payload
 
       actions = [
         buffer: {:output, %Buffer{payload: head}},
